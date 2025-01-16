@@ -1,4 +1,4 @@
-# rahti2 node.js
+# order-service-demo
 
 ### For deployment to Rahti2
 

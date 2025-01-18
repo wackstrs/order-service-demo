@@ -13,17 +13,13 @@ app.use(express.json())
 
 app.get('/', async (req, res) => {
     try {
-        const test = await prisma.test.findMany()
-        res.send({ msg: 'mongodb prisma findMany', test: test })
-    } catch (err) {
-        console.error("Error connecting to the database:", err)
-        res.status(500).send({
-            msg: 'ERROR',
-            error: err.message,
-            stack: err.stack, // This may provide more insight into where the issue is occurring
-        })
-    }
-})
+        // Try to fetch the current time from the database to ensure the connection is working
+        const result = await prismaClient.$queryRaw`SELECT NOW()`;
+        res.json({ message: 'Database connection successful', result });
+      } catch (error) {
+        res.status(500).json({ message: 'Database connection failed', error: error.message });
+      }
+    });
 
 app.get('/prisma', async (req, res) => {
     const test = await prisma.test.findMany()

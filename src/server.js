@@ -15,16 +15,14 @@ app.get('/', async (req, res) => {
     try {
         const test = await prisma.test.findMany()
         res.send({ msg: 'mongodb prisma findMany', test: test })
-
     } catch (err) {
-        
-        console.log(err)
-        res.send({
+        console.error("Error connecting to the database:", err)
+        res.status(500).send({
             msg: 'ERROR',
-            error: err
+            error: err.message,
+            stack: err.stack, // This may provide more insight into where the issue is occurring
         })
     }
-
 })
 
 app.get('/prisma', async (req, res) => {

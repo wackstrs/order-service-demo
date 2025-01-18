@@ -1,48 +1,39 @@
-const express = require('express')
-const app = express()
+const express = require("express");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
+require("dotenv").config();
+const app = express();
+const PORT = process.env.PORT || 8080;
 
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+console.log(`Node.js ${process.version}`);
 
-require('dotenv').config()
-const PORT = process.env.PORT || 8080
+app.use(express.json());
 
-console.log(`Node.js ${process.version}`)
-
-app.use(express.json())
-
-// Root endpoint to check database connection
 app.get('/', async (req, res) => {
+    const timestamp = new Date().toISOString();
     try {
-        // Try to fetch the current time from the database to ensure the connection is working
-        const result = await prisma.$queryRaw`SELECT NOW()`; // Corrected to use "prisma"
-        res.json({ message: 'Database connection successful', result });
+      await prisma.$queryRaw`SELECT NOW()`;  
+      res.status(200).json({
+        status: "ok",
+        message: "API and Database are running",
+        timestamp: timestamp,
+      });
     } catch (error) {
-        res.status(500).json({ message: 'Database connection failed', error: error.message });
+      res.status(500).json({
+        status: "error",
+        message: "API is running, but unable to connect to the database",
+        database_status: "disconnected",
+        error: error.message,
+        timestamp: timestamp,
+      });
     }
-});
+  });
 
-// Endpoint to test fetching data using Prisma
-app.get('/prisma', async (req, res) => {
-    const test = await prisma.test.findMany()
-    res.send({ msg: 'Prisma findMany', test: test })
-})
 
-// Default health check endpoint
-app.get('/health', (req, res) => {
-    res.status(200).send({
-        status: 'ok',
-        message: 'API is running smoothly',
-        uptime: process.uptime(),
-        timestamp: new Date().toISOString(),
-    })
-})
-
-// Start the server
 app.listen(PORT, () => {
-    try {
-        console.log(`Running on http://localhost:${PORT}`)
-    } catch (error) {
-        console.log(error.message);
-    }
-})
+  try {
+    console.log(`Running on http://localhost:${PORT}`);
+  } catch (error) {
+    console.log(error.message);
+  }
+});

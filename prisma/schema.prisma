@@ -7,7 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model test {
-  id  Int    @id @default(autoincrement()) // PostgreSQL uses integer IDs by default
-  foo String
+model Order {
+  id          Int       @id @default(autoincrement())  // Auto-incrementing primary key
+  user_id     Int       // Foreign key for the user placing the order
+  products    String    // Store products as a JSON string or text (comma-separated, etc.)
+  total_amount Float    // Store the total amount of the order
+  created_at  DateTime  @default(now()) @db.Timestamptz // Timestamp when the order is created
+  updated_at  DateTime  @updatedAt @db.Timestamptz // Timestamp when the order is updated
 }

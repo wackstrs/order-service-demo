@@ -1,0 +1,28 @@
+@apiURL=https://order-service-demo-git-order-service-demo.2.rahtiapp.fi/
+
+
+// health check (root endpoint)
+GET {{apiURL}}
+Content-Type: application/json
+
+###
+// get list of a all orders
+GET {{apiURL}}/api/orders
+Content-Type: application/json
+
+###
+// create a new order
+POST {{apiURL}}/api/orders
+Content-Type: application/json
+{
+  "description": "Test Order",
+  "quantity": 5
+}
+
+###
+// get order by id
+GET {{apiURL}}/api/orders/1
+Content-Type: application/json
+
+
+

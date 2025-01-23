@@ -9,6 +9,10 @@ console.log(`Node.js ${process.version}`);
 
 app.use(express.json());
 
+const orderRoutes = require("./routes/orders");
+
+app.use("/api", orderRoutes);
+
 app.get('/', async (req, res) => {
     const timestamp = new Date().toISOString();
     try {

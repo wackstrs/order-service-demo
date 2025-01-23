@@ -7,7 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model test {
-  id  String @id @default(uuid())
-  foo String
+model Order {
+  id          Int      @id @default(autoincrement())
+  description String
+  quantity    Int
+  orderDate   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

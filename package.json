@@ -20,8 +20,8 @@
   "homepage": "https://github.com/fw-teaching/rahti2-docker-node#readme",
   "dependencies": {
     "@prisma/client": "^6.2.1",
-    "dotenv": "^16.4.7",
-    "express": "^4.19.2"
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.3",

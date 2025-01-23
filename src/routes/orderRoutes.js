@@ -28,10 +28,10 @@ router.get("/orders/:id", async (req, res) => {
 
 // Create a new order
 router.post("/orders", async (req, res) => {
-    const { userId, products, totalAmount } = req.body;
+    const { user_id, products, total_amount } = req.body;
     try {
         const newOrder = await prisma.order.create({
-            data: { userId, products, totalAmount },
+            data: { user_id, products, total_amount },
         });
         res.status(201).json(newOrder);
     } catch (error) {
@@ -42,11 +42,11 @@ router.post("/orders", async (req, res) => {
 // Update an existing order
 router.put("/orders/:id", async (req, res) => {
     const { id } = req.params;
-    const { products, totalAmount } = req.body;
+    const { products, total_amount } = req.body;
     try {
         const updatedOrder = await prisma.order.update({
             where: { id: parseInt(id) },
-            data: { products, totalAmount },
+            data: { products, total_amount },
         });
         res.status(200).json(updatedOrder);
     } catch (error) {

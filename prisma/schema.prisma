@@ -7,10 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Order {
-  id          Int      @id @default(autoincrement())
-  description String
-  quantity    Int
-  orderDate   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model test {
+  id  Int    @id @default(autoincrement()) // PostgreSQL uses integer IDs by default
+  foo String
 }

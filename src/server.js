@@ -1,43 +1,42 @@
-const express = require("express");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
-require("dotenv").config();
-const app = express();
-const PORT = process.env.PORT || 8080;
+const express = require('express')
+const app = express()
 
-console.log(`Node.js ${process.version}`);
+const { PrismaClient } = require('@prisma/client')
+const prisma = new PrismaClient()
 
-app.use(express.json());
+require('dotenv').config()
+const PORT = process.env.PORT || 8080
 
-const orderRoutes = require("./routes/orders");
+console.log(`Node.js ${process.version}`)
 
-app.use("/api", orderRoutes);
+app.use(express.json())
 
 app.get('/', async (req, res) => {
-    const timestamp = new Date().toISOString();
     try {
-      await prisma.$queryRaw`SELECT NOW()`;  
-      res.status(200).json({
-        status: "ok",
-        message: "API and Database are running",
-        timestamp: timestamp,
-      });
-    } catch (error) {
-      res.status(500).json({
-        status: "error",
-        message: "API is running, but unable to connect to the database",
-        database_status: "disconnected",
-        error: error.message,
-        timestamp: timestamp,
-      });
-    }
-  });
+        const test = await prisma.test.findMany()
+        res.send({ msg: 'mongodb prisma findMany', test: test })
 
+    } catch (err) {
+        
+        console.log(err)
+        res.send({
+            msg: 'ERROR',
+            error: err
+        })
+    }
+
+})
+
+app.get('/prisma', async (req, res) => {
+    const test = await prisma.test.findMany()
+    res.send({ msg: 'mongodb prisma findMany', test: test })
+})
 
 app.listen(PORT, () => {
-  try {
-    console.log(`Running on http://localhost:${PORT}`);
-  } catch (error) {
-    console.log(error.message);
-  }
-});
+    try {
+        console.log(`Running on http://localhost:${PORT}`)
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+    
+})

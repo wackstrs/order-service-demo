@@ -96,6 +96,7 @@ router.post("/orders", async (req, res) => {
             amount: item.quantity,
             product_price: item.price,
             product_name: item.product_name,
+            total_price: item.total_price,
           })),
         },
       },

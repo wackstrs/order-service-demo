@@ -24,6 +24,7 @@ model order_items {
   amount        Int       @map("amount")
   product_price Decimal   @map("product_price") 
   product_name  String    @map("product_name")
+  total_price   Decimal  @map("total_price")
 
   order         orders     @relation(fields: [order_id], references: [orderId])
 }

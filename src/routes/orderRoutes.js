@@ -59,39 +59,42 @@ router.get("/orders/:user_id", async (req, res) => {
 });
 
 
-// Route för att skapa en ny order
 router.post("/orders", async (req, res) => {
   const { userId, token } = req.body;
 
-  // validera att userId och token finns
+  // Validate that userId and token are provided
   if (!userId || !token) {
     return res.status(400).json({
       error: "Saknade fält",
       message: "userId och token krävs",
     });
   }
+
   try {
-    // Hämtar användarens kundvagn
+    // Fetch the user's cart using the getCartData function
     const cartData = await getCartData(userId, token);
 
-    // Kontrollerar att kundvagnen inte är tom
-    if (!cartData || !cartData.cart || cartData.cart.length === 0) {
+    // If cartData is null (empty cart or error in fetch), return error response
+    if (!cartData) {
       return res.status(400).json({
         error: "Tom kundvagn",
-        message: "Kundvagnen är tom",
+        message: "Kundvagnen är tom eller felaktig",
       });
     }
 
-    // Skapar en ny order
+    // Calculate the total order price by summing up the total_price of each item in the cart
+    const orderPrice = cartData.cart.reduce((sum, item) => sum + item.total_price, 0);
+
+    // Create the new order
     const newOrder = await prisma.orders.create({
       data: {
         userId: userId,
-        orderPrice: cartData.totalPrice,
+        orderPrice: orderPrice, // Use the calculated order price
         orderItems: {
           create: cartData.cart.map((item) => ({
             product_id: item.product_id,
-            amount: item.amount,
-            product_price: item.product_price,
+            amount: item.quantity,
+            product_price: item.price,
             product_name: item.product_name,
           })),
         },
@@ -101,7 +104,7 @@ router.post("/orders", async (req, res) => {
       },
     });
 
-    // Returnerar success
+    // Return the success response with the created order
     res.status(201).json({
       message: "Order skapad",
       order: newOrder,
@@ -109,7 +112,7 @@ router.post("/orders", async (req, res) => {
   } catch (error) {
     console.error("Misslyckades med att skapa beställning:", error);
 
-    // Returnerar error
+    // Return error response
     res.status(500).json({
       error: "Misslyckades med att skapa beställning",
       message: error.message,

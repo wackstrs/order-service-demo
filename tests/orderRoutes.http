@@ -1,0 +1,30 @@
+@apiURL=
+
+###
+// hämta alla besätllningar
+GET {{apiURL}}/api/orders
+Content-Type: application/json
+
+###
+// Skapa en ny beställning
+POST {{apiURL}}/api/orders
+Content-Type: application/json
+
+{
+  "user_id": 112,
+  "products": [
+    {
+      "sku": "12345",
+      "name": "T-shirt",
+      "quantity": 2,
+      "price": 15.00
+    },
+    {
+      "sku": "67890",
+      "name": "Mug",
+      "quantity": 1,
+      "price": 5.00
+    }
+  ],
+  "total_amount": 35.00
+}

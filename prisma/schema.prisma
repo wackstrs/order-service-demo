@@ -9,13 +9,21 @@ datasource db {
 
 // exempel på table
 
-model Order {
-  id          Int       @id @default(autoincrement())  
-  user_id     Int       
-  products    Json    
-  total_amount Float    
-  created_at  DateTime  @default(now())
-  updated_at  DateTime  @updatedAt 
+model orders {
+  orderId     Int      @id @default(autoincrement()) @map("order_id")
+  userId      Int      @map("user_id")
+  timestamp   DateTime @default(now()) @map("timestamp")
+  orderPrice  Decimal  @db.Decimal @map("order_price")
+  orderItems  order_items[]
+}
 
-  @@map("orders")
+model order_items {
+  order_item_id Int       @id @default(autoincrement()) @map("order_item_id")
+  order_id      Int       @map("order_id")
+  product_id    Int       @map("product_id")
+  amount        Int       @map("amount")
+  product_price Decimal   @map("product_price") 
+  product_name  String    @map("product_name")
+
+  order         orders     @relation(fields: [order_id], references: [orderId])
 }

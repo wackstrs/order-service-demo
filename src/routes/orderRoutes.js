@@ -1,100 +1,120 @@
 const express = require("express");
+const router = express.Router();
 const prisma = require("../config/prisma");
 
-const router = express.Router();
+const { getCartData } = require("../middleware/cart");
 
-// Get all orders
+// Hämta alla beställningar
 router.get("/orders", async (req, res) => {
-    try {
-        const orders = await prisma.order.findMany();
-        res.status(200).json(orders);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Failed to fetch orders", message: error.message });
-    }
+  try {
+    const orders = await prisma.orders.findMany();
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ error: "Hämtningen misslyckades", message: error.message });
+  }
 });
 
-// Get a specific order by ID
-router.get("/orders/:id", async (req, res) => {
-    const orderId = parseInt(req.params.id, 10);
+/**
+ * Hämtar alla ordrar för en specifik användare.
+ * 
+ * Args:
+ *  - user_id (int): Unikt user_id som hämtas från URL-parametern
+ * 
+ * Returns:
+ *  - (Array | Object): En lista med ordrar inklusive orderdetaljer om de finns
+ *  - (Object): Ett felmeddelande om inga ordrar hittas eller om ett serverfel uppstår
+ * 
+ * Exempel:
+ *  - GET /orders/101
+ *  - Response: [{ orderId: 1, userId: 101, orderPrice: 299.99, orderItems: [...] }, ...]
+ */
+router.get("/orders/:user_id", async (req, res) => {
+  const { user_id } = req.params; // Hämtar user_id från URLen
 
-    try {
-        const order = await prisma.order.findUnique({
-            where: { id: orderId },
-        });
+  try {
+    const orders = await prisma.orders.findMany({
+      // Hittar alla orders som hör till denna user_id
+      where: { userId: parseInt(user_id) },
+      include: { // Inkluderar orderItems
+        orderItems: true,
+      },
+    });
 
-        if (order) {
-            res.status(200).json(order);
-        } else {
-            res.status(404).json({ error: "Order not found" });
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Failed to fetch order", message: error.message });
+    if (orders.length === 0) {
+      // Om användaren inte har någon order
+      return res
+        .status(404)
+        .json({ msg: `No orders found for user with ID: ${user_id}.` });
     }
+
+    // Om allt ok, returnerar orders
+    res.status(200).json(orders);
+  } catch (err) { // Om någonting misslyckas, returnera error kod 500
+    console.error("Error fetching orders:", err);
+    res.status(500).json({ msg: "Internal server error" });
+  }
 });
 
-// Create a new order
+
+// Route för att skapa en ny order
 router.post("/orders", async (req, res) => {
-    const { user_id, products, total_amount } = req.body;
+  const { userId, token } = req.body;
 
-    if (!user_id || !products || !total_amount) {
-        return res.status(400).json({
-            error: "Missing required fields",
-            message: "user_id, products, and total_amount are required",
-        });
+  // validera att userId och token finns
+  if (!userId || !token) {
+    return res.status(400).json({
+      error: "Saknade fält",
+      message: "userId och token krävs",
+    });
+  }
+  try {
+    // Hämtar användarens kundvagn
+    const cartData = await getCartData(userId, token);
+
+    // Kontrollerar att kundvagnen inte är tom
+    if (!cartData || !cartData.cart || cartData.cart.length === 0) {
+      return res.status(400).json({
+        error: "Tom kundvagn",
+        message: "Kundvagnen är tom",
+      });
     }
 
-    try {
-        const newOrder = await prisma.order.create({
-            data: {
-                user_id,
-                products: JSON.stringify(products), // Assuming products is an array of objects
-                total_amount,
-            },
-        });
-        res.status(201).json(newOrder);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Failed to create order", message: error.message });
-    }
-});
+    // Skapar en ny order
+    const newOrder = await prisma.orders.create({
+      data: {
+        userId: userId,
+        orderPrice: cartData.totalPrice,
+        orderItems: {
+          create: cartData.cart.map((item) => ({
+            product_id: item.product_id,
+            amount: item.amount,
+            product_price: item.product_price,
+            product_name: item.product_name,
+          })),
+        },
+      },
+      include: {
+        orderItems: true,
+      },
+    });
 
-// Update an existing order
-router.put("/orders/:id", async (req, res) => {
-    const orderId = parseInt(req.params.id, 10);
-    const { user_id, products, total_amount } = req.body;
+    // Returnerar success
+    res.status(201).json({
+      message: "Order skapad",
+      order: newOrder,
+    });
+  } catch (error) {
+    console.error("Misslyckades med att skapa beställning:", error);
 
-    try {
-        const updatedOrder = await prisma.order.update({
-            where: { id: orderId },
-            data: {
-                user_id,
-                products: JSON.stringify(products),
-                total_amount,
-            },
-        });
-        res.status(200).json(updatedOrder);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Failed to update order", message: error.message });
-    }
-});
-
-// Delete an order
-router.delete("/orders/:id", async (req, res) => {
-    const orderId = parseInt(req.params.id, 10);
-
-    try {
-        const deletedOrder = await prisma.order.delete({
-            where: { id: orderId },
-        });
-
-        res.status(200).json({ message: `Order ${orderId} deleted successfully` });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Failed to delete order", message: error.message });
-    }
+    // Returnerar error
+    res.status(500).json({
+      error: "Misslyckades med att skapa beställning",
+      message: error.message,
+    });
+  }
 });
 
 module.exports = router;

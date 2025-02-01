@@ -1,0 +1,1 @@
+// productsAPI som GET information om produkterna ur produktregistret som hör till user_id beställning

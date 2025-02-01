@@ -4,16 +4,13 @@ require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-
-console.log(`Node.js ${process.version}`);
-
 app.use(express.json());
 
-// Import the orderRoutes from orderRoutes.js
+//const authenticateToken = require("./middleware/authMiddleware");
 const orderRoutes = require("./routes/orderRoutes");
 app.use("/api", orderRoutes);
 
-// Root endpoint for API status
+// Root endpoint med information om API status
 app.get("/", async (req, res) => {
     const timestamp = new Date().toISOString();
     try {
@@ -36,5 +33,9 @@ app.get("/", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Running on http://localhost:${PORT}`);
+    try {
+        console.log(`Running on http://localhost:${PORT}`);
+    } catch (error) {
+        console.log(error.message);
+    }
 });

@@ -4,7 +4,7 @@ const checkInventory = async (req, res, next) => {
     try {
       // Prepare payload for inventory service
       const inventoryRequest = {
-        email: "order-service@test.com,", // req.user.email, // Assuming user info is available in the request
+        email: "order-service@test.com", // req.user.email, // Assuming user info is available in the request
         items: cartData.cart.map(item => ({
           productCode: "0001", //item.product_id, // Using product_id from cart data
           quantity: 2, //item.quantity,      // Quantity from cart data

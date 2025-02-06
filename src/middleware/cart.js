@@ -1,54 +1,48 @@
 const getCartData = async (req, res, next) => {
-  const { userId, token } = req.body;
+    const { userId, token } = req.body; // userId och token kommer från JWT via front-end till vår /orders POST
 
-  if (!userId || !token) {
-    return res.status(400).json({
-      error: "Missing Fields",
-      message: "userId and token are required",
-    });
-  }
-
-  try {
-    // Fetch user's cart data from cart-service
-    const response = await fetch(`https://cart-service-git-cart-service.2.rahtiapp.fi/cart/${userId}`, {
-      method: "GET",
-      headers: {
-        'token': token // Use the provided JWT token
-      }
-    });
-
-    if (!response.ok) {
-      console.error('Failed to fetch cart data');
-      return res.status(400).json({
-        error: "Failed to fetch cart data",
-        message: "The cart service request failed",
-      });
+    if (!userId || !token) {
+        return res.status(400).json({
+            error: "Saknar userId och token",
+            message: "userId och token krävs för att hämta kundvagnsdata",
+        });
     }
 
-    // Parse the cart data
-    const cartData = await response.json();
+    try {
+        // 
+        const response = await fetch(`https://cart-service-git-cart-service.2.rahtiapp.fi/cart/${userId}`, {
+            method: "GET",
+            headers: {
+                'token': token // Kommer från JWT token
+            }
+        });
 
-    // Validate the cart data
-    if (!cartData || !cartData.cart || cartData.cart.length === 0) {
-      console.error('Cart is empty or invalid');
-      return res.status(400).json({
-        error: "Empty or Invalid Cart",
-        message: "The cart is empty or invalid",
-      });
+        if (!response.ok) { // Om fetchen misslyckas
+            console.error('Failed to fetch cart data');
+            return null;
+        }
+
+        // Får cartData i JSON format
+        const cartData = await response.json();
+
+        // Kollar att cartData existerar och inte är tom
+        if (!cartData || !cartData.cart || cartData.cart.length === 0) {
+            console.error('Cart is empty or invalid');
+            return null;
+        }
+
+        // Lägg till cartData i request objektet för att användas i nästa middleware
+        req.cartData = cartData;
+
+        // Fortsätt till nästa middleware (checkInventory)
+        next();
+    } catch (error) { // Om något går fel...
+        console.error('Error fetching cart data:', error);
+        return res.status(500).json({
+            error: "Internal Server Error",
+            message: "Failed to fetch cart data",
+        });
     }
-
-    // Attach cart data to the request object
-    req.cartData = cartData;
-
-    // Proceed to the next middleware
-    next();
-  } catch (error) {
-    console.error('Error fetching cart data:', error);
-    return res.status(500).json({
-      error: "Internal Server Error",
-      message: "Failed to fetch cart data",
-    });
-  }
 };
 
 module.exports = getCartData;

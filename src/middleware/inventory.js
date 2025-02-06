@@ -1,5 +1,6 @@
+// Middleware som kontrollerar och reducerar lagersaldo för varje produkt i kundvagnen
 const checkInventory = async (req, res, next) => {
-    const cartData = req.cartData; // This comes from getCartData middleware
+    const cartData = req.cartData; // cartData från föregående middleware
 
     try {
         // Payload som ska skickas till inventory service, hårdkodat för tillfället
@@ -13,7 +14,7 @@ const checkInventory = async (req, res, next) => {
             ]
         };
 
-        // Send request to inventory service
+        // Skickar en POST request till inventory service för att minska lagersaldot
         const inventoryResponse = await fetch("https://dev-inventory-service-inventory-service.2.rahtiapp.fi/inventory/decrease", {
             method: 'POST',
             headers: {
@@ -22,20 +23,23 @@ const checkInventory = async (req, res, next) => {
             body: JSON.stringify(inventoryRequest),
         });
 
+        // Om responsen från inventory service inte är ok, returnera ett felmeddelande
         if (!inventoryResponse.ok) {
             const errorData = await inventoryResponse.json();
             return res.status(400).json({
-                error: errorData.error || "Inventory Update Failed",
-                message: errorData.message || "Unable to update inventory stock",
+                error: errorData.error || "Uppdatering av lagersaldo misslyckades",
+                message: errorData.message || "Går inte att uppdatera lagersaldo",
             });
         }
 
-        next(); // Proceed to next step in the order process
+        next(); // Om allt ok, fortsätt till nästa middleware
     } catch (error) {
-        console.error("Error communicating with inventory service:", error);
+        console.error(error);
+
+        // Om någonting annat misslyckas, returnera ett felmeddelande
         return res.status(500).json({
-            error: "Internal Server Error",
-            message: "Failed to validate or update inventory due to a communication error",
+            error: "Internt serverfel",
+            message: "Misslyckades med att validera eller uppdatera lagersaldo",
         });
     }
 };

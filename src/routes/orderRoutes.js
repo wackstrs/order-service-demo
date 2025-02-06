@@ -2,10 +2,8 @@ const express = require("express");
 const router = express.Router();
 const prisma = require("../config/prisma");
 
-const getCartData = require('../middleware/cart.js'); // Import the getCartData middleware
-const checkInventory = require('../middleware/inventory.js'); // Import the checkInventory middleware
-const e = require("express");
-
+const getCartData = require('../middleware/cart.js'); // Importera getCartData middleware
+const checkInventory = require('../middleware/inventory.js'); // Importera checkInventory middleware
 
 // Hämta alla beställningar (oklart om detta behövs, admin eventuellt?)
 router.get("/orders", async (req, res) => {
@@ -63,14 +61,13 @@ router.get("/orders/:user_id", async (req, res) => {
 
 // Skapa en ny order
 router.post("/orders", getCartData, checkInventory, async (req, res) => {
-  const { userId } = req.body;
-  const cartData = req.cartData;
+  const cartData = req.cartData; // Hämtar cartData från middleware
 
   try {
-    // Calculate total order price
+    // Beräkna totalpriset för ordern
     const orderPrice = cartData.cart.reduce((sum, item) => sum + item.total_price, 0);
 
-    // Create order in the database
+    // Skapa order i databasen
     const newOrder = await prisma.orders.create({
       data: {
         userId: userId,
@@ -81,7 +78,7 @@ router.post("/orders", getCartData, checkInventory, async (req, res) => {
             amount: item.quantity,
             product_price: item.price,
             product_name: item.product_name,
-            total_price: item.total_price,
+            total_price: item.total_price, // Oklart om vi ska hämta eller räkna ut detta
           })),
         },
       },
@@ -90,13 +87,15 @@ router.post("/orders", getCartData, checkInventory, async (req, res) => {
       },
     });
 
+    // Returnera success
     res.status(201).json({
-      message: "Order created successfully",
+      message: "Order skapad",
       order: newOrder,
     });
   } catch (error) {
+    // Returnera error
     res.status(500).json({
-      error: "Failed to create order",
+      error: "Misslyckades att skapa order",
       message: error.message,
     });
   }

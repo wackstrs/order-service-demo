@@ -1,3 +1,6 @@
+require('dotenv').config();
+const INVENTORY_SERVICE_URL = process.env.INVENTORY_SERVICE_URL;
+
 // Middleware som kontrollerar och reducerar lagersaldo för varje produkt i kundvagnen
 const checkInventory = async (req, res, next) => {
     const cartData = req.cartData; // cartData från föregående middleware
@@ -15,7 +18,7 @@ const checkInventory = async (req, res, next) => {
         };
 
         // Skickar en POST request till inventory service för att minska lagersaldot
-        const inventoryResponse = await fetch("https://dev-inventory-service-inventory-service.2.rahtiapp.fi/inventory/decrease", {
+        const inventoryResponse = await fetch(INVENTORY_SERVICE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

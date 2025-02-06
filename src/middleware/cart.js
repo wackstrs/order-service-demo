@@ -1,3 +1,7 @@
+const CART_SERVICE_URL = process.env.CART_SERVICE_URL;
+
+
+
 const getCartData = async (req, res, next) => {
     const { userId, token } = req.body; // userId och token kommer från JWT via front-end till vår /orders POST
 
@@ -10,7 +14,7 @@ const getCartData = async (req, res, next) => {
 
     try {
         // 
-        const response = await fetch(`https://cart-service-git-cart-service.2.rahtiapp.fi/cart/${userId}`, {
+        const response = await fetch(`${CART_SERVICE_URL}/cart/${userId}`, {
             method: "GET",
             headers: {
                 'token': token // Kommer från JWT token

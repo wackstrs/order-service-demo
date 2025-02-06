@@ -1,4 +1,5 @@
 @apiURL=
+@token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QgdXNlciIsImlhdCI6MTUxNjIzOTAyMn0.4ekKG3jv8-GMu4p6f6foD93fdjs-qNOHnMZSddus2ns
 
 ###
 // hämta alla besätllningar
@@ -27,4 +28,50 @@ Content-Type: application/json
     }
   ],
   "total_amount": 35.00
+}
+
+###
+
+POST https://order-service-demo-git-order-service-demo.2.rahtiapp.fi/api/orders
+Content-Type: application/json
+
+{
+  "userId": 3,
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QgdXNlciIsImlhdCI6MTUxNjIzOTAyMn0.4ekKG3jv8-GMu4p6f6foD93fdjs-qNOHnMZSddus2ns"
+}
+
+###
+GET https://cart-service-git-cart-service.2.rahtiapp.fi/cart/3
+Authorization: Bearer {{token}}
+
+
+
+###
+POST https://dev-inventory-service-inventory-service.2.rahtiapp.fi/inventory/decrease
+
+{
+  "email": "order-service@test.com",
+  "items": [
+    {
+      "productCode": "0001",
+      "quantity": 1
+    }
+  ]
+}
+
+
+###
+POST https://invoicing-service-git-invoicing-service.2.rahtiapp.fi/shipments
+Content-Type: application/json
+
+{
+"user_id": 2,
+"timestamp": "2025-01-01T12:00:00",
+"order_price": 199.99,
+"order_id": 2,
+"order_item_id": 2,
+"product_id": 2,
+"amount": 2,
+"product_price": 99.99,
+"product_name": "test"
 }

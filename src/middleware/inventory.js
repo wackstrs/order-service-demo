@@ -1,21 +1,16 @@
 const checkInventory = async (req, res, next) => {
     const cartData = req.cartData; // This comes from getCartData middleware
 
-    if (!cartData || !cartData.cart || cartData.cart.length === 0) {
-        return res.status(400).json({
-            error: "Invalid Cart",
-            message: "Cart data is missing or empty.",
-        });
-    }
-
     try {
-        // Prepare inventory request from cart data
+        // Payload som ska skickas till inventory service, hårdkodat för tillfället
         const inventoryRequest = {
-            email: "order-service@test.com", // Hardcoded for testing
-            items: cartData.cart.map(item => ({
-                productCode: item.product_id,  // Use product_id from cart data
-                quantity: item.quantity,      // Use quantity from cart data
-            })),
+            email: "order-service@test.com", // Hårdkodat
+            items: [
+                {
+                    productCode: "0001", // Hårdkodat, ska vara product_id från cart
+                    quantity: 1 // Hårdkodat, ska vara quantity från cart
+                }
+            ]
         };
 
         // Send request to inventory service

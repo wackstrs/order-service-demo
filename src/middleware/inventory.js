@@ -1,25 +1,24 @@
 const checkInventory = async (req, res, next) => {
-    // Extract payload from the HTTP client request body
-    const { email, items } = req.body;
+    const cartData = req.cartData; // This comes from getCartData middleware
 
-    if (!email || !items || items.length === 0) {
+    if (!cartData || !cartData.cart || cartData.cart.length === 0) {
         return res.status(400).json({
-            error: "Invalid Payload",
-            message: "Email and items are required.",
+            error: "Invalid Cart",
+            message: "Cart data is missing or empty.",
         });
     }
 
     try {
-        // Prepare the inventory request based on the data from the HTTP client
+        // Prepare inventory request from cart data
         const inventoryRequest = {
-            email: email,  // Use email sent from HTTP client
-            items: items.map(item => ({
-                productCode: item.productCode, // productCode from the client request
-                quantity: item.quantity,       // quantity from the client request
+            email: "order-service@test.com", // Hardcoded for testing
+            items: cartData.cart.map(item => ({
+                productCode: item.product_id,  // Use product_id from cart data
+                quantity: item.quantity,      // Use quantity from cart data
             })),
         };
 
-        // Send POST request to the inventory service to check and reduce stock
+        // Send request to inventory service
         const inventoryResponse = await fetch("https://dev-inventory-service-inventory-service.2.rahtiapp.fi/inventory/decrease", {
             method: 'POST',
             headers: {
@@ -28,7 +27,6 @@ const checkInventory = async (req, res, next) => {
             body: JSON.stringify(inventoryRequest),
         });
 
-        // If the inventory service responds with an error (non-2xx status)
         if (!inventoryResponse.ok) {
             const errorData = await inventoryResponse.json();
             return res.status(400).json({
@@ -37,11 +35,9 @@ const checkInventory = async (req, res, next) => {
             });
         }
 
-        // If inventory update is successful, proceed to the next middleware
-        next();
+        next(); // Proceed to next step in the order process
     } catch (error) {
         console.error("Error communicating with inventory service:", error);
-        // Handle network errors, service unavailability, etc.
         return res.status(500).json({
             error: "Internal Server Error",
             message: "Failed to validate or update inventory due to a communication error",

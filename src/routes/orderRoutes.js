@@ -2,8 +2,9 @@ const express = require("express");
 const router = express.Router();
 const prisma = require("../config/prisma");
 
-const getCartData = require('../middleware/cart.js'); // Importera getCartData middleware
-const checkInventory = require('../middleware/inventory.js'); // Importera checkInventory middleware
+// Importera middlewares
+const getCartData = require('../middleware/cart.js');
+const checkInventory = require('../middleware/inventory.js');
 
 // Hämta alla beställningar (oklart om detta behövs, admin eventuellt?)
 router.get("/orders", async (req, res) => {
@@ -61,6 +62,7 @@ router.get("/orders/:user_id", async (req, res) => {
 
 // Skapa en ny order
 router.post("/orders", getCartData, checkInventory, async (req, res) => {
+  const { userId } = req.body; // Hämtar userId från request body
   const cartData = req.cartData; // Hämtar cartData från middleware
 
   try {

@@ -1,4 +1,3 @@
-require('dotenv').config();
 const INVENTORY_SERVICE_URL = process.env.INVENTORY_SERVICE_URL;
 
 // Middleware som kontrollerar och reducerar lagersaldo för varje produkt i kundvagnen

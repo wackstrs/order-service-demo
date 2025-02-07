@@ -11,6 +11,10 @@ router.get("/orders", async (req, res) => {
   try {
     const orders = await prisma.orders.findMany();
     res.status(200).json(orders);
+
+    if (orders.length === 0) {
+      return res.status(404).json({ error: "Inga ordrar hittades" });
+    }
   } catch (error) {
     console.error(error);
     res
@@ -41,7 +45,7 @@ router.get("/orders/:user_id", async (req, res) => {
       // Hittar alla orders som hör till denna user_id
       where: { user_id: parseInt(user_id) },
       include: { // Inkluderar orderItems
-        orderItems: true,
+        order_items: true,
       },
     });
 

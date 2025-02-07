@@ -7,24 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// exempel på table
-
 model orders {
-  orderId     Int      @id @default(autoincrement()) @map("order_id")
-  userId      Int      @map("user_id")
-  timestamp   DateTime @default(now()) @map("timestamp")
-  orderPrice  Decimal  @db.Decimal @map("order_price")
-  orderItems  order_items[]
+  order_id    Int       @id @default(autoincrement())
+  user_id     Int
+  timestamp   DateTime  @default(now()) 
+  order_price Decimal   @db.Decimal(10, 2)
+  order_items order_items[]
 }
 
 model order_items {
-  order_item_id Int       @id @default(autoincrement()) @map("order_item_id")
-  order_id      Int       @map("order_id")
-  product_id    Int       @map("product_id")
-  amount        Int       @map("amount")
-  product_price Decimal   @map("product_price") 
-  product_name  String    @map("product_name")
-  total_price   Decimal  @map("total_price")
+  order_item_id Int       @id @default(autoincrement())
+  order_id      Int
+  product_id    Int
+  product_name  String
+  quantity      Int  
+  product_price Decimal   @db.Decimal(10, 2) 
+  total_price   Decimal   @db.Decimal(10, 2) 
 
-  order         orders     @relation(fields: [order_id], references: [orderId])
+  order         orders    @relation(fields: [order_id], references: [order_id])
 }

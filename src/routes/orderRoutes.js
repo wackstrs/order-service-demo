@@ -5,6 +5,7 @@ const prisma = require("../config/prisma");
 // Importera middlewares
 const getCartData = require('../middleware/cart.js');
 const checkInventory = require('../middleware/inventory.js');
+const sendOrder = require("../services/sendOrder");
 
 // Hämta alla beställningar (oklart om detta behövs, admin eventuellt?)
 router.get("/orders", async (req, res) => {
@@ -64,46 +65,46 @@ router.get("/orders/:user_id", async (req, res) => {
   }
 });
 
-// Skapa en ny order
 router.post("/orders", getCartData, checkInventory, async (req, res) => {
-  const { user_id } = req.body; // Hämtar userId från request body
-  const cartData = req.cartData; // Hämtar cartData från middleware
+  const { user_id } = req.body;
+  const cartData = req.cartData;
 
   try {
-    // Beräkna totalpriset för ordern
-    const order_price = cartData.cart.reduce((sum, item) => sum + item.total_price, 0);
+      // Calculate total order price
+      const order_price = cartData.cart.reduce((sum, item) => sum + item.total_price, 0);
 
-    // Skapa order i databasen
-    const newOrder = await prisma.orders.create({
-      data: {
-        user_id: user_id,
-        order_price: order_price,
-        order_items: {
-          create: cartData.cart.map(item => ({
-            product_id: item.product_id,
-            quantity: item.quantity,
-            product_price: item.price,
-            product_name: item.product_name,
-            total_price: item.total_price,
-          })),
-        },
-      },
-      include: {
-        order_items: true,
-      },
-    });
+      // Create new order
+      const newOrder = await prisma.orders.create({
+          data: {
+              user_id,
+              order_price,
+              order_items: {
+                  create: cartData.cart.map(item => ({
+                      product_id: item.product_id,
+                      quantity: item.quantity,
+                      product_price: item.product_price,
+                      product_name: item.product_name,
+                      total_price: item.total_price,
+                  })),
+              },
+          },
+          include: { order_items: true },
+      });
 
-    // Returnera success
-    res.status(201).json({
-      message: "Order skapad",
-      order: newOrder,
-    });
+      console.log("New order created:", newOrder);
+
+      // Send order to invoicing-service
+      const invoiceResponse = await sendOrder(newOrder);
+      if (!invoiceResponse.success) {
+          return res.status(500).json({ error: "Failed to send invoice", details: invoiceResponse.error });
+      }
+
+      // Return success response
+      res.status(201).json({ message: "Order created and sent to invoicing", order: newOrder });
+
   } catch (error) {
-    // Returnera error
-    res.status(500).json({
-      error: "Misslyckades att skapa order",
-      message: error.message,
-    });
+      console.error("Order creation error:", error);
+      res.status(500).json({ error: "Failed to create order", message: error.message });
   }
 });
 

@@ -62,30 +62,30 @@ router.get("/orders/:user_id", async (req, res) => {
 
 // Skapa en ny order
 router.post("/orders", getCartData, checkInventory, async (req, res) => {
-  const { userId } = req.body; // Hämtar userId från request body
+  const { user_id } = req.body; // Hämtar userId från request body
   const cartData = req.cartData; // Hämtar cartData från middleware
 
   try {
     // Beräkna totalpriset för ordern
-    const orderPrice = cartData.cart.reduce((sum, item) => sum + item.total_price, 0);
+    const order_price = cartData.cart.reduce((sum, item) => sum + item.total_price, 0);
 
     // Skapa order i databasen
     const newOrder = await prisma.orders.create({
       data: {
-        userId: userId,
-        orderPrice: orderPrice,
-        orderItems: {
+        user_id: user_id,
+        order_price: order_price,
+        order_items: {
           create: cartData.cart.map(item => ({
             product_id: item.product_id,
-            amount: item.quantity,
+            quantity: item.quantity,
             product_price: item.price,
             product_name: item.product_name,
-            total_price: item.total_price, // Oklart om vi ska hämta eller räkna ut detta
+            total_price: item.total_price,
           })),
         },
       },
       include: {
-        orderItems: true,
+        order_items: true,
       },
     });
 

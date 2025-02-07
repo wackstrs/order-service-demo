@@ -75,3 +75,63 @@ Content-Type: application/json
 "product_price": 99.99,
 "product_name": "test"
 }
+
+###
+POST https://order-service-api-order-service.2.rahtiapp.fi/api/orders
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QgdXNlciIsImlhdCI6MTUxNjIzOTAyMn0.4ekKG3jv8-GMu4p6f6foD93fdjs-qNOHnMZSddus2ns"
+}
+
+###
+POST https://invoicing-service-git-invoicing-service.2.rahtiapp.fi/shipments
+Content-Type: application/json
+
+{
+"user_id": 2,
+"timestamp": "2025-01-01T16:28:00",
+"order_price": 199.99,
+"order_id": 2,
+"order_item_id": 2,
+"product_id": 2,
+"amount": 2,
+"product_price": 99.99,
+"product_name": "Testing, testing..."
+}
+
+
+###
+POST https://invoicing-service-git-invoicing-service.2.rahtiapp.fi/shipments
+Content-Type: application/json
+
+{
+  "user_id": 2,
+  "timestamp": "2025-01-01T12:00:00",
+  "order_price": 199.99,
+  "order_id": 2,
+  "order_items": [
+    {
+      "order_item_id": 2,
+      "product_id": 2,
+      "amount": 2,
+      "product_price": 99.99,
+      "product_name": "Test Product 1"
+    },
+    {
+      "order_item_id": 3,
+      "product_id": 3,
+      "amount": 1,
+      "product_price": 50.00,
+      "product_name": "Test Product 2"
+    },
+    {
+      "order_item_id": 4,
+      "product_id": 4,
+      "amount": 3,
+      "product_price": 30.00,
+      "product_name": "Test Product 3"
+    }
+  ]
+}

@@ -3,9 +3,9 @@ const CART_SERVICE_URL = process.env.CART_SERVICE_URL;
 
 
 const getCartData = async (req, res, next) => {
-    const { userId, token } = req.body; // userId och token kommer från JWT via front-end till vår /orders POST
+    const { user_id, token } = req.body; // user_id och token kommer från JWT via front-end till vår /orders POST
 
-    if (!userId || !token) {
+    if (!user_id || !token) {
         return res.status(400).json({
             error: "Saknar userId och token",
             message: "userId och token krävs för att hämta kundvagnsdata",

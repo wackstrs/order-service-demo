@@ -4,20 +4,21 @@ async function sendOrder(newOrder) {
     const { user_id, order_price, order_id, order_items, timestamp } = newOrder;
 
     try {
-        // Format the shipment data
+        // Format the shipment data for the entire order
         const shipmentData = {
             user_id,
-            order_id,
-            timestamp,
+            timestamp,                // Ensure this is in the correct ISO 8601 format
             order_price,
+            order_id,
             order_items: order_items.map(item => ({
                 order_item_id: item.order_item_id,
                 product_id: item.product_id,
-                quantity: item.quantity,
+                amount: item.quantity,    // Renamed field from "quantity" to "amount"
                 product_price: item.product_price,
-                product_name: item.product_name,
+                product_name: item.product_name
             }))
         };
+
 
         console.log("Sending to invoicing-service:", JSON.stringify(shipmentData, null, 2));
 

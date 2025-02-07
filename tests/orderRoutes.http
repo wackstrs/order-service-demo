@@ -1,5 +1,6 @@
-@apiURL=
+@apiURL = https://order-service-demo-git-order-service-demo.2.rahtiapp.fi
 @token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QgdXNlciIsImlhdCI6MTUxNjIzOTAyMn0.4ekKG3jv8-GMu4p6f6foD93fdjs-qNOHnMZSddus2ns
+
 
 ###
 // hämta alla besätllningar

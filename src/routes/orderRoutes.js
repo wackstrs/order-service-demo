@@ -39,7 +39,7 @@ router.get("/orders/:user_id", async (req, res) => {
   try {
     const orders = await prisma.orders.findMany({
       // Hittar alla orders som hör till denna user_id
-      where: { userId: parseInt(user_id) },
+      where: { user_id: parseInt(user_id) },
       include: { // Inkluderar orderItems
         orderItems: true,
       },

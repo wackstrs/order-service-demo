@@ -7,14 +7,14 @@ const getCartData = async (req, res, next) => {
 
     if (!user_id || !token) {
         return res.status(400).json({
-            error: "Saknar userId och token",
-            message: "userId och token krävs för att hämta kundvagnsdata",
+            error: "Saknar user_id och token",
+            message: "user_id och token krävs för att hämta kundvagnsdata",
         });
     }
 
     try {
         // 
-        const response = await fetch(`${CART_SERVICE_URL}/cart/${userId}`, {
+        const response = await fetch(`${CART_SERVICE_URL}/cart/${user_id}`, {
             method: "GET",
             headers: {
                 'token': token // Kommer från JWT token

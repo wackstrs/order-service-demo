@@ -1,5 +1,6 @@
 const swaggerJSDoc = require('swagger-jsdoc');
 const swaggerUI = require('swagger-ui-express');
+require('dotenv').config();
 
 const options = {
     definition: {
@@ -11,10 +12,10 @@ const options = {
         },
         servers: [
             {
-                url: "https://order-service-demo-git-order-service-demo.2.rahtiapp.fi/api",
+                url: process.env.DEPLOYMENT_URL || "http://localhost:8080/api",
             },
             {
-                url: "http://localhost:8080/api",
+                url: process.env.LOCAL_URL || "http://localhost:8080/api",
             },
         ],
     },

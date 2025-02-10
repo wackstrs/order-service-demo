@@ -1,14 +1,13 @@
 const CART_SERVICE_URL = process.env.CART_SERVICE_URL;
 
 const getCartData = async (req, res, next) => {
-    const { user_id } = req.body;
-    const token = req.headers.authorization?.split(" ")[1]; // Extract token after "Bearer "
+    const { user_id, token } = req.body; // Get user_id and token from request body
 
     // Step 1: Validate Request Data (user_id and token)
     if (!user_id || !token) {
         return res.status(400).json({
-            error: "Saknar user_id och token",
-            message: "user_id krävs i body och token måste skickas i Authorization-headern",
+            error: "Missing user_id and token",
+            message: "Both user_id and token must be provided in the request body.",
         });
     }
 
@@ -26,16 +25,9 @@ const getCartData = async (req, res, next) => {
             const errorData = await response.json();
             console.error(`Failed to fetch cart data: ${errorData.message}`);
 
-            if (response.status === 401) {
-                return res.status(401).json({
-                    error: "Unauthorized",
-                    message: errorData.message || "Invalid token"
-                });
-            }
-
             return res.status(response.status).json({
                 error: errorData.error || "Unknown error",
-                message: errorData.message || "An error occurred while fetching cart data."
+                message: errorData.message || "An error occurred while fetching cart data.",
             });
         }
 

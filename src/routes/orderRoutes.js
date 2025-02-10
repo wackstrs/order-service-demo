@@ -2,10 +2,10 @@ const express = require("express");
 const router = express.Router();
 const prisma = require("../config/prisma");
 
-// Import middlewares
-const getCartData = require("../middleware/cart.js");
-const checkInventory = require("../middleware/inventory.js");
-const sendOrder = require("../services/sendOrder.js");
+// Importera middlewares
+const getCartData = require('../middleware/cart.js');
+const checkInventory = require('../middleware/inventory.js');
+const sendOrder = require("../middleware/sendOrder.js");
 
 /**
  * @swagger
@@ -43,13 +43,11 @@ const sendOrder = require("../services/sendOrder.js");
  *       500:
  *         description: Server error.
  */
-
-
 router.get("/orders", async (req, res) => {
   try {
     const orders = await prisma.orders.findMany({
       include: {
-        order_items: true,  // Include related order items
+        order_items: true,
       },
     });
 
@@ -66,6 +64,20 @@ router.get("/orders", async (req, res) => {
   }
 });
 
+/**
+ * Hämtar alla ordrar för en specifik användare.
+ * 
+ * Args:
+ *  - user_id (int): Unikt user_id som hämtas från URL-parametern
+ * 
+ * Returns:
+ *  - (Array | Object): En lista med ordrar inklusive orderdetaljer om de finns
+ *  - (Object): Ett felmeddelande om inga ordrar hittas eller om ett serverfel uppstår
+ * 
+ * Exempel:
+ *  - GET /orders/101
+ *  - Response: [{ order_id: 1, user_id: 101, order_price: 299.99, order_items: [...] }, ...]
+ */
 
 /**
  * @swagger
@@ -106,25 +118,28 @@ router.get("/orders", async (req, res) => {
  *       500:
  *         description: Internal server error.
  */
-
-
 router.get("/orders/:user_id", async (req, res) => {
-  const { user_id } = req.params;
+  const { user_id } = req.params; // Hämtar user_id från URLen
 
   try {
     const orders = await prisma.orders.findMany({
+      // Hittar alla orders som hör till denna user_id
       where: { user_id: parseInt(user_id) },
-      include: { order_items: true },
+      include: { // Inkluderar orderItems
+        order_items: true,
+      },
     });
 
     if (orders.length === 0) {
+      // Om användaren inte har någon order
       return res
         .status(404)
         .json({ msg: `No orders found for user with ID: ${user_id}.` });
     }
 
+    // Om allt ok, returnerar orders
     res.status(200).json(orders);
-  } catch (err) {
+  } catch (err) { // Om någonting misslyckas, returnera error kod 500
     console.error("Error fetching orders:", err);
     res.status(500).json({ msg: "Internal server error" });
   }
@@ -135,8 +150,21 @@ router.get("/orders/:user_id", async (req, res) => {
  * /orders:
  *   post:
  *     summary: Create a new order
- *     description: Creates an order in the database and sends it to the invoicing service.
+ *     description: Creates an order in the database after fetching the cart for a specific user using the provided user_id and token.
  *     tags: [Orders]
+ *     parameters:
+ *       - in: query
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the user placing the order.
+ *       - in: query
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The JWT token used for authentication.
  *     requestBody:
  *       required: true
  *       content:
@@ -144,8 +172,6 @@ router.get("/orders/:user_id", async (req, res) => {
  *           schema:
  *             type: object
  *             properties:
- *               user_id:
- *                 type: integer
  *               cartData:
  *                 type: object
  *                 properties:
@@ -165,7 +191,6 @@ router.get("/orders/:user_id", async (req, res) => {
  *                         total_price:
  *                           type: number
  *           example:
- *             user_id: 101
  *             cartData:
  *               cart:
  *                 - product_id: 1
@@ -183,30 +208,39 @@ router.get("/orders/:user_id", async (req, res) => {
  *               order:
  *                 order_id: 1
  *                 user_id: 101
- *                 order_price: 299.99
+ *                 order_price: 499.97
  *                 order_items:
  *                   - product_id: 1
  *                     product_name: "Hantverksöl IPA"
  *                     quantity: 2
  *                     product_price: 149.99
  *                     total_price: 299.98
+ *                   - product_id: 2
+ *                     product_name: "Lageröl"
+ *                     quantity: 1
+ *                     product_price: 199.99
+ *                     total_price: 199.99
+ *       400:
+ *         description: Bad request, missing parameters (user_id, token).
  *       500:
- *         description: Failed to create order.
+ *         description: Internal server error.
  */
 
 router.post("/orders", getCartData, checkInventory, async (req, res) => {
-  const { user_id } = req.body;
-  const cartData = req.cartData;
+  const { user_id } = req.body; // Hämtar userId från request body
+  const cartData = req.cartData; // Hämtar cartData från middleware
 
   try {
+    // Beräkna totalpriset för ordern
     const order_price = cartData.cart.reduce((sum, item) => sum + item.total_price, 0);
 
+    // Skapa order i databasen
     const newOrder = await prisma.orders.create({
       data: {
         user_id,
         order_price,
         order_items: {
-          create: cartData.cart.map((item) => ({
+          create: cartData.cart.map(item => ({
             product_id: item.product_id,
             quantity: item.quantity,
             product_price: item.price,
@@ -218,19 +252,29 @@ router.post("/orders", getCartData, checkInventory, async (req, res) => {
       include: { order_items: true },
     });
 
-    console.log("New order created:", newOrder);
 
-    /* Send order to invoicing-service
-    const invoiceResponse = await sendOrder(newOrder);
-    if (!invoiceResponse.success) {
-        return res.status(500).json({ error: "Failed to send invoice", details: invoiceResponse.error });
+
+    /* Send the new order to invoice and email
+
+    const orderSent = await sendOrder(newOrder);
+    console.log(orderSent);
+    if (!orderSent) {
+      throw new Error("Kunde inte skicka beställningen vidare.");
     }
+
     */
 
-    res.status(201).json({ message: "Order created and sent to invoicing", order: newOrder });
+    // Returnera success
+    res.status(201).json({
+      message: "Order skapad",
+      order: newOrder,
+    });
   } catch (error) {
-    console.error("Order creation error:", error);
-    res.status(500).json({ error: "Failed to create order", message: error.message });
+    // Returnera error
+    res.status(500).json({
+      error: "Misslyckades att skapa order",
+      message: error.message,
+    });
   }
 });
 

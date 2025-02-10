@@ -1,7 +1,5 @@
 const CART_SERVICE_URL = process.env.CART_SERVICE_URL;
 
-
-
 const getCartData = async (req, res, next) => {
     const { user_id, token } = req.body;
 
@@ -27,6 +25,16 @@ const getCartData = async (req, res, next) => {
             // Cart service returned an error (e.g., 404, 401, 500)
             const errorData = await response.json();
             console.error(`Failed to fetch cart data: ${errorData.message}`);
+
+            // If the error is related to the token (e.g., invalid token), include the cart service error message
+            if (response.status === 401) {
+                return res.status(401).json({
+                    error: "Unauthorized",
+                    message: errorData.message || "Invalid token"
+                });
+            }
+
+            // For other errors, just return the response status and error message from the cart service
             return res.status(response.status).json({
                 error: errorData.error || "Unknown error",
                 message: errorData.message || "An error occurred while fetching cart data."

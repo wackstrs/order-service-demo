@@ -7,13 +7,13 @@ async function sendOrder(newOrder) {
         // Format the shipment data for the entire order
         const shipmentData = {
             user_id,
-            timestamp,                // Ensure this is in the correct ISO 8601 format
+            timestamp,              
             order_price,
             order_id,
             order_items: order_items.map(item => ({
                 order_item_id: item.order_item_id,
                 product_id: item.product_id,
-                amount: item.quantity,    // Renamed field from "quantity" to "amount"
+                amount: item.quantity,    
                 product_price: item.product_price,
                 product_name: item.product_name
             }))

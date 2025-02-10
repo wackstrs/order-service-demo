@@ -8,15 +8,24 @@ GET {{apiURL}}/api/orders
 Content-Type: application/json
 
 ###
-// Skapa en ny order
+// Skapa en ny order (DEMO)
 POST https://order-service-demo-git-order-service-demo.2.rahtiapp.fi/api/orders
 Content-Type: application/json
 
 {
-  "user_id": 2,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QgdXNlciIsImlhdCI6MTUxNjIzOTAyMn0.4ekKG3jv8-GMu4p6f6foD93fdjs-qNOHnMZSddus2ns"
+  "user_id": 222,
+  "token": "yJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QgdXNlciIsImlhdCI6MTUxNjIzOTAyMn0.4ekKG3jv8-GMu4p6f6foD93fdjs-qNOHnMZSddus2ns"
 }
 
+###
+// Skapa en ny order
+POST https://order-service-api-order-service.2.rahtiapp.fi/api/orders
+Content-Type: application/json
+
+{
+  "user_id": 3,
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QgdXNlciIsImlhdCI6MTUxNjIzOTAyMn0.4ekKG3jv8-GMu4p6f6foD93fdjs-qNOHnMZSddus2ns"
+}
 ###
 GET https://cart-service-git-cart-service.2.rahtiapp.fi/cart/3
 Authorization: Bearer {{token}}

@@ -93,11 +93,12 @@ router.post("/orders", getCartData, checkInventory, async (req, res) => {
 
       console.log("New order created:", newOrder);
 
-      // Send order to invoicing-service
+      /* Send order to invoicing-service
       const invoiceResponse = await sendOrder(newOrder);
       if (!invoiceResponse.success) {
           return res.status(500).json({ error: "Failed to send invoice", details: invoiceResponse.error });
       }
+      */
 
       // Return success response
       res.status(201).json({ message: "Order created and sent to invoicing", order: newOrder });

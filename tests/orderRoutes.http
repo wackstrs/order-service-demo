@@ -3,16 +3,17 @@
 
 
 ###
-// hämta alla besätllningar
+// hämta alla ordrar
 GET {{apiURL}}/api/orders
 Content-Type: application/json
 
 ###
+// Skapa en ny order
 POST https://order-service-demo-git-order-service-demo.2.rahtiapp.fi/api/orders
 Content-Type: application/json
 
 {
-  "user_id": 3,
+  "user_id": 2,
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QgdXNlciIsImlhdCI6MTUxNjIzOTAyMn0.4ekKG3jv8-GMu4p6f6foD93fdjs-qNOHnMZSddus2ns"
 }
 
@@ -23,6 +24,7 @@ Authorization: Bearer {{token}}
 
 
 ###
+// Minska antal av en produkt i lager
 POST https://dev-inventory-service-inventory-service.2.rahtiapp.fi/inventory/decrease
 
 {
@@ -41,16 +43,28 @@ POST https://invoicing-service-git-invoicing-service.2.rahtiapp.fi/shipments
 Content-Type: application/json
 
 {
-"user_id": 2,
-"timestamp": "2025-01-01T12:00:00",
-"order_price": 199.99,
-"order_id": 2,
-"order_item_id": 2,
-"product_id": 2,
-"amount": 2,
-"product_price": 99.99,
-"product_name": "test"
+  "user_id": 2,
+  "timestamp": "2025-01-01T12:00:00",
+  "order_price": 199.99,
+  "order_id": 2,
+  "order_items": [
+    {
+      "order_item_id": 1,
+      "product_id": 1,
+      "amount": 1,
+      "product_price": 99.99,
+      "product_name": "Mega Craft Beer XL"
+    },
+    {
+      "order_item_id": 2,
+      "product_id": 2,
+      "amount": 2,
+      "product_price": 49.99,
+      "product_name": "Craft Beer Standard"
+    }
+  ]
 }
+
 
 ###
 POST https://order-service-demo-git-order-service-demo.2.rahtiapp.fi/api/orders

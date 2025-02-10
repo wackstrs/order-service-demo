@@ -3,8 +3,9 @@ const CART_SERVICE_URL = process.env.CART_SERVICE_URL;
 
 
 const getCartData = async (req, res, next) => {
-    const { user_id, token } = req.body; // user_id och token kommer från JWT via front-end till vår /orders POST
+    const { user_id, token } = req.body;
 
+    // Step 1: Validate Request Data (user_id and token)
     if (!user_id || !token) {
         return res.status(400).json({
             error: "Saknar user_id och token",
@@ -13,45 +14,49 @@ const getCartData = async (req, res, next) => {
     }
 
     try {
-        // 
+        // Step 2: Fetch Cart Data from Cart Service
         const response = await fetch(`${CART_SERVICE_URL}/cart/${user_id}`, {
             method: "GET",
             headers: {
-                'token': token // Kommer från JWT token
+                'token': token
             }
         });
 
+        // Step 3: Handle Cart Service Errors (Non-2xx Responses)
         if (!response.ok) {
-            console.error('Failed to fetch cart data');
-            return res.status(404).json({
-                error: "Cart Not Found",
-                message: "No cart found for this user.",
+            // Cart service returned an error (e.g., 404, 401, 500)
+            const errorData = await response.json();
+            console.error(`Failed to fetch cart data: ${errorData.message}`);
+            return res.status(response.status).json({
+                error: errorData.error || "Unknown error",
+                message: errorData.message || "An error occurred while fetching cart data."
             });
         }
 
-        // Får cartData i JSON format
+        // Step 4: Parse the Cart Data
         const cartData = await response.json();
 
-       // Handle empty cart explicitly
-       if (!cartData || !cartData.cart || cartData.cart.length === 0) {
-        console.error('Cart is empty');
-        return res.status(200).json({
-            message: "Cart is empty",  // Return early and prevent order creation
-            cart: []  // Return an empty cart as response
+        // Step 5: Handle Empty Cart (Cart is found but empty)
+        if (!cartData?.cart?.length) {
+            console.error('Cart is empty');
+            return res.status(200).json({
+                message: "Cart is empty",
+                cart: []  // Return an empty cart as response
+            });
+        }
+
+        // Step 6: Valid Cart - Attach Cart Data to Request and Proceed
+        req.cartData = cartData;
+        next();
+
+    } catch (error) {
+        // Step 7: Handle Unexpected Errors (Network issues, Parsing errors)
+        console.error('Error fetching cart data:', error);
+        return res.status(500).json({
+            error: "Internal Server Error",
+            message: "Failed to fetch cart data",
         });
     }
-
-    // Proceed with the next middleware if the cart is not empty
-    req.cartData = cartData;
-    next();
-
-} catch (error) {
-    console.error('Error fetching cart data:', error);
-    return res.status(500).json({
-        error: "Internal Server Error",
-        message: "Failed to fetch cart data",
-    });
-}
 };
 
 module.exports = getCartData;

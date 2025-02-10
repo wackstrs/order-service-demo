@@ -150,81 +150,97 @@ router.get("/orders/:user_id", async (req, res) => {
  * /orders:
  *   post:
  *     summary: Create a new order
- *     description: Creates an order in the database after fetching the cart for a specific user using the provided user_id and token.
- *     tags: [Orders]
+ *     description: Fetches cart data, checks inventory, and creates an order.
+ *     operationId: createOrder
+ *     tags:
+ *       - Orders
  *     parameters:
- *       - in: query
- *         name: user_id
+ *       - name: user_id
+ *         in: query
+ *         description: The user ID for whom the order is being created.
  *         required: true
  *         schema:
  *           type: integer
- *         description: The ID of the user placing the order.
- *       - in: query
- *         name: token
+ *       - name: token
+ *         in: query
+ *         description: The JWT token for authorization.
  *         required: true
  *         schema:
  *           type: string
- *         description: The JWT token used for authentication.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               cartData:
- *                 type: object
- *                 properties:
- *                   cart:
- *                     type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         product_id:
- *                           type: integer
- *                         quantity:
- *                           type: integer
- *                         price:
- *                           type: number
- *                         product_name:
- *                           type: string
- *                         total_price:
- *                           type: number
- *           example:
- *             cartData:
- *               cart:
- *                 - product_id: 1
- *                   product_name: "Hantverksöl IPA"
- *                   quantity: 2
- *                   price: 149.99
- *                   total_price: 299.98
  *     responses:
  *       201:
- *         description: Order created successfully.
+ *         description: Order created successfully
  *         content:
  *           application/json:
- *             example:
- *               message: "Order created and sent to invoicing"
- *               order:
- *                 order_id: 1
- *                 user_id: 101
- *                 order_price: 499.97
- *                 order_items:
- *                   - product_id: 1
- *                     product_name: "Hantverksöl IPA"
- *                     quantity: 2
- *                     product_price: 149.99
- *                     total_price: 299.98
- *                   - product_id: 2
- *                     product_name: "Lageröl"
- *                     quantity: 1
- *                     product_price: 199.99
- *                     total_price: 199.99
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Order created successfully"
+ *                 order:
+ *                   type: object
+ *                   properties:
+ *                     order_id:
+ *                       type: integer
+ *                       example: 12345
+ *                     user_id:
+ *                       type: integer
+ *                       example: 3
+ *                     order_price:
+ *                       type: number
+ *                       format: float
+ *                       example: 199.99
+ *                     order_items:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           product_id:
+ *                             type: integer
+ *                             example: 101
+ *                           product_name:
+ *                             type: string
+ *                             example: "Craft Beer 500ml"
+ *                           quantity:
+ *                             type: integer
+ *                             example: 2
+ *                           product_price:
+ *                             type: number
+ *                             format: float
+ *                             example: 49.99
+ *                           total_price:
+ *                             type: number
+ *                             format: float
+ *                             example: 99.98
  *       400:
- *         description: Bad request, missing parameters (user_id, token).
+ *         description: Missing user_id or token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Missing user_id or token"
+ *                 message:
+ *                   type: string
+ *                   example: "user_id and token are required to fetch cart data"
  *       500:
- *         description: Internal server error.
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to create order"
+ *                 message:
+ *                   type: string
+ *                   example: "An unexpected error occurred while creating the order"
  */
+
 
 router.post("/orders", getCartData, checkInventory, async (req, res) => {
   const { user_id } = req.body; // Hämtar userId från request body

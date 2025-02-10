@@ -18,14 +18,28 @@ const options = {
                 url: process.env.LOCAL_URL || "http://localhost:8080/api",
             },
         ],
-    },
-    apis: ['./src/routes/*.js'],
-};
-
-const swaggerSpec = swaggerJSDoc(options);
-
-const setupSwagger = (app) => {
-    app.use('/api/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
-};
-
-module.exports = setupSwagger;
+        components: {
+            securitySchemes: {
+              bearerAuth: {
+                type: "http",
+                scheme: "bearer",
+                bearerFormat: "JWT",
+              },
+            },
+          },
+          security: [
+            {
+              bearerAuth: [],
+            },
+          ],
+        },
+        apis: ["./routes/*.js"], // Ensure this path correctly includes your order routes
+      };
+      
+      const swaggerSpec = swaggerJsdoc(options);
+      
+      function setupSwagger(app) {
+        app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+      }
+      
+      module.exports = setupSwagger;

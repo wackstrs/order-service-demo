@@ -155,18 +155,22 @@ router.get("/orders/:user_id", async (req, res) => {
  *     tags:
  *       - Orders
  *     parameters:
- *       - name: user_id
- *         in: query
- *         description: The user ID for whom the order is being created.
- *         required: true
- *         schema:
- *           type: integer
- *       - name: token
- *         in: query
- *         description: The JWT token for authorization.
+ *       - name: Authorization
+ *         in: header
+ *         description: "JWT token for authorization. Format: 'Bearer <token>'"
  *         required: true
  *         schema:
  *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user_id:
+ *                 type: integer
+ *                 example: 1
  *     responses:
  *       201:
  *         description: Order created successfully
@@ -225,7 +229,7 @@ router.get("/orders/:user_id", async (req, res) => {
  *                   example: "Missing user_id or token"
  *                 message:
  *                   type: string
- *                   example: "user_id and token are required to fetch cart data"
+ *                   example: "user_id is required in the body and token must be sent in the Authorization header"
  *       500:
  *         description: Internal server error
  *         content:
@@ -240,17 +244,15 @@ router.get("/orders/:user_id", async (req, res) => {
  *                   type: string
  *                   example: "An unexpected error occurred while creating the order"
  */
-
-
 router.post("/orders", getCartData, checkInventory, async (req, res) => {
-  const { user_id } = req.body; // Hämtar userId från request body
-  const cartData = req.cartData; // Hämtar cartData från middleware
+  const { user_id } = req.body; // Extract user_id from request body
+  const cartData = req.cartData; // Extract cartData from middleware
 
   try {
-    // Beräkna totalpriset för ordern
+    // Calculate total order price
     const order_price = cartData.cart.reduce((sum, item) => sum + item.total_price, 0);
 
-    // Skapa order i databasen
+    // Create order in database
     const newOrder = await prisma.orders.create({
       data: {
         user_id,
@@ -268,27 +270,25 @@ router.post("/orders", getCartData, checkInventory, async (req, res) => {
       include: { order_items: true },
     });
 
-
-
-    /* Send the new order to invoice and email
+    /* Uncomment this when order should be forwarded to invoice and email services
 
     const orderSent = await sendOrder(newOrder);
     console.log(orderSent);
     if (!orderSent) {
-      throw new Error("Kunde inte skicka beställningen vidare.");
+      throw new Error("Failed to forward the order.");
     }
 
     */
 
-    // Returnera success
+    // Return success response
     res.status(201).json({
-      message: "Order skapad",
+      message: "Order created successfully",
       order: newOrder,
     });
   } catch (error) {
-    // Returnera error
+    console.error(error);
     res.status(500).json({
-      error: "Misslyckades att skapa order",
+      error: "Failed to create order",
       message: error.message,
     });
   }

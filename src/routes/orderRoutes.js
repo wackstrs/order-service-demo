@@ -9,7 +9,7 @@ const sendOrder = require("../services/sendOrder.js");
 
 /**
  * @swagger
- * /api/orders:
+ * /orders:
  *   get:
  *     summary: Retrieve all orders
  *     description: Fetches all orders from the database.
@@ -69,7 +69,7 @@ router.get("/orders", async (req, res) => {
 
 /**
  * @swagger
- * /api/orders/{user_id}:
+ * /orders/{user_id}:
  *   get:
  *     summary: Get orders for a specific user
  *     description: Fetches all orders related to a given user ID.
@@ -132,7 +132,7 @@ router.get("/orders/:user_id", async (req, res) => {
 
 /**
  * @swagger
- * /api/orders:
+ * /orders:
  *   post:
  *     summary: Create a new order
  *     description: Creates an order in the database and sends it to the invoicing service.

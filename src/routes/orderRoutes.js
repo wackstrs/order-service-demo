@@ -154,23 +154,22 @@ router.get("/orders/:user_id", async (req, res) => {
  *     operationId: createOrder
  *     tags:
  *       - Orders
- *     parameters:
- *       - name: Authorization
- *         in: header
- *         description: "JWT token for authorization. Format: 'Bearer <token>'"
- *         required: true
- *         schema:
- *           type: string
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - user_id
+ *               - token
  *             properties:
  *               user_id:
  *                 type: integer
  *                 example: 1
+ *               token:
+ *                 type: string
+ *                 example: "jwt-token-here"
  *     responses:
  *       201:
  *         description: Order created successfully
@@ -195,6 +194,10 @@ router.get("/orders/:user_id", async (req, res) => {
  *                       type: number
  *                       format: float
  *                       example: 199.99
+ *                     timestamp:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-02-10T14:30:00Z"
  *                     order_items:
  *                       type: array
  *                       items:
@@ -229,7 +232,7 @@ router.get("/orders/:user_id", async (req, res) => {
  *                   example: "Missing user_id or token"
  *                 message:
  *                   type: string
- *                   example: "user_id is required in the body and token must be sent in the Authorization header"
+ *                   example: "Both user_id and token are required."
  *       500:
  *         description: Internal server error
  *         content:
@@ -244,15 +247,25 @@ router.get("/orders/:user_id", async (req, res) => {
  *                   type: string
  *                   example: "An unexpected error occurred while creating the order"
  */
+
 router.post("/orders", getCartData, checkInventory, async (req, res) => {
-  const { user_id } = req.body; // Extract user_id from request body
-  const cartData = req.cartData; // Extract cartData from middleware
+  const { user_id, token } = req.body; // Extract user_id and token from body
+
+  if (!user_id || !token) {
+    return res.status(400).json({
+      error: "Missing user_id or token",
+      message: "Both user_id and token are required.",
+    });
+  }
 
   try {
-    // Calculate total order price
+    // Retrieve cart data from middleware
+    const cartData = req.cartData;
+
+    // Calculate total price
     const order_price = cartData.cart.reduce((sum, item) => sum + item.total_price, 0);
 
-    // Create order in database
+    // Create order in the database
     const newOrder = await prisma.orders.create({
       data: {
         user_id,
@@ -270,24 +283,16 @@ router.post("/orders", getCartData, checkInventory, async (req, res) => {
       include: { order_items: true },
     });
 
-    /* Uncomment this when order should be forwarded to invoice and email services
+    // Send order to invoice and email services (commented for now)
+    // const orderSent = await sendOrder(newOrder);
+    // if (!orderSent) throw new Error("Failed to forward order.");
 
-    const orderSent = await sendOrder(newOrder);
-    console.log(orderSent);
-    if (!orderSent) {
-      throw new Error("Failed to forward the order.");
-    }
-
-    */
-
-    // Return success response
-    res.status(201).json({
+    return res.status(201).json({
       message: "Order created successfully",
       order: newOrder,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
+    return res.status(500).json({
       error: "Failed to create order",
       message: error.message,
     });

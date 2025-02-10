@@ -5,7 +5,7 @@ const prisma = require("../config/prisma");
 // Importera middlewares
 const getCartData = require('../middleware/cart.js');
 const checkInventory = require('../middleware/inventory.js');
-const sendOrder = require("../middleware/sendOrder.js");
+const sendOrder = require('../middleware/sendOrder.js');
 
 /**
  * @swagger

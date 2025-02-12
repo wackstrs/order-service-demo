@@ -268,11 +268,11 @@ router.post("/orders", getCartData, checkInventory, async (req, res) => {
     // Create order in the database
     const newOrder = await prisma.orders.create({
       data: {
-        user_id,
-        order_price,
+        user_id,       // User ID
+        order_price,   // Total order price
         order_items: {
           create: cartData.cart.map(item => ({
-            product_id: String(item.product_id),
+            product_id: item.product_id,  // No need to use String() if it's already a string
             quantity: item.quantity,
             product_price: item.price,
             product_name: item.product_name,
@@ -280,7 +280,9 @@ router.post("/orders", getCartData, checkInventory, async (req, res) => {
           })),
         },
       },
-      include: { order_items: true },
+      include: {
+        order_items: true, // Include the order items in the response
+      },
     });
 
     // Send order to invoice and email services (commented for now)

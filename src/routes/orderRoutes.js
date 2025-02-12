@@ -272,7 +272,7 @@ router.post("/orders", getCartData, checkInventory, async (req, res) => {
         order_price,
         order_items: {
           create: cartData.cart.map(item => ({
-            product_id: item.product_id,
+            product_id: String(item.product_id),
             quantity: item.quantity,
             product_price: item.price,
             product_name: item.product_name,

@@ -1,6 +1,7 @@
 @apiURL = https://order-service-demo-git-order-service-demo.2.rahtiapp.fi
 @token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QgdXNlciIsImlhdCI6MTUxNjIzOTAyMn0.4ekKG3jv8-GMu4p6f6foD93fdjs-qNOHnMZSddus2ns
 
+// ORDER-SERVICE
 
 ###
 // hämta alla ordrar
@@ -13,8 +14,8 @@ POST https://order-service-demo-git-order-service-demo.2.rahtiapp.fi/api/orders
 Content-Type: application/json
 
 {
-  "user_id": 222,
-  "token": "yJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QgdXNlciIsImlhdCI6MTUxNjIzOTAyMn0.4ekKG3jv8-GMu4p6f6foD93fdjs-qNOHnMZSddus2ns"
+  "user_id": 23,
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QgdXNlciIsImlhdCI6MTUxNjIzOTAyMn0.4ekKG3jv8-GMu4p6f6foD93fdjs-qNOHnMZSddus2ns"
 }
 
 ###
@@ -23,13 +24,13 @@ POST https://order-service-api-order-service.2.rahtiapp.fi/api/orders
 Content-Type: application/json
 
 {
-  "user_id": 3,
+  "user_id": 1,
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QgdXNlciIsImlhdCI6MTUxNjIzOTAyMn0.4ekKG3jv8-GMu4p6f6foD93fdjs-qNOHnMZSddus2ns"
 }
 ###
-GET https://cart-service-git-cart-service.2.rahtiapp.fi/cart/3
-Authorization: Bearer {{token}}
-
+GET https://cart-service-git-cart-service.2.rahtiapp.fi/cart/1
+Content-Type: application/json
+token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QgdXNlciIsImlhdCI6MTUxNjIzOTAyMn0.4ekKG3jv8-GMu4p6f6foD93fdjs-qNOHnMZSddus2ns
 
 
 ###
@@ -45,44 +46,11 @@ POST https://dev-inventory-service-inventory-service.2.rahtiapp.fi/inventory/dec
     }
   ]
 }
-
-
 ###
-POST https://invoicing-service-git-invoicing-service.2.rahtiapp.fi/shipments
+
+// Kontrollera lagersaldo för alla produkter
+GET https://dev-inventory-service-inventory-service.2.rahtiapp.fi/inventory
 Content-Type: application/json
-
-{
-  "user_id": 2,
-  "timestamp": "2025-01-01T12:00:00",
-  "order_price": 199.99,
-  "order_id": 2,
-  "order_items": [
-    {
-      "order_item_id": 1,
-      "product_id": 1,
-      "amount": 1,
-      "product_price": 99.99,
-      "product_name": "Mega Craft Beer XL"
-    },
-    {
-      "order_item_id": 2,
-      "product_id": 2,
-      "amount": 2,
-      "product_price": 49.99,
-      "product_name": "Craft Beer Standard"
-    }
-  ]
-}
-
-
-###
-POST https://order-service-demo-git-order-service-demo.2.rahtiapp.fi/api/orders
-Content-Type: application/json
-
-{
-  "user_id": 2,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QgdXNlciIsImlhdCI6MTUxNjIzOTAyMn0.4ekKG3jv8-GMu4p6f6foD93fdjs-qNOHnMZSddus2ns"
-}
 
 
 ###
@@ -90,53 +58,56 @@ GET https://order-service-demo-git-order-service-demo.2.rahtiapp.fi/api/orders/4
 Content-Type: application/json
 
 
+
+
+// INVOICING-SERVICE
+
+// Hämta alla fakturor
 ###
-POST https://invoicing-service-git-invoicing-service.2.rahtiapp.fi/shipments
+GET https://invoicing-service-git-invoicing-service.2.rahtiapp.fi/orders
+Content-Type: application/json
+
+// Skapa en ny faktura
+###
+POST https://invoicing-service-git-invoicing-service.2.rahtiapp.fi/orders
 Content-Type: application/json
 
 {
-"user_id": 2,
-"timestamp": "2025-01-01T16:28:00",
-"order_price": 199.99,
-"order_id": 2,
-"order_item_id": 2,
-"product_id": 2,
-"amount": 2,
-"product_price": 99.99,
-"product_name": "Testing, testing..."
+    "user_id": 19,
+    "timestamp": "2025-02-13T23:40:17.778Z",
+    "order_price": 34.50,
+    "order_id": 67,
+    "order_items": [
+        {
+            "order_item_id": 78,
+            "product_id": 101,
+            "amount": 3,
+            "product_price": 3.00,
+            "product_name": "Corona"
+        },
+        {
+            "order_item_id": 79,
+            "product_id": 102,
+            "amount": 1,
+            "product_price": 25.50,
+            "product_name": "A. Le Coq Premium 24x0,33l"
+        }
+    ]
 }
 
 
+
+// PRODUCT_SERVICE
+
+// Hämta alla produkter
 ###
-POST https://invoicing-service-git-invoicing-service.2.rahtiapp.fi/shipments
+GET https://product-service-cna-product-service.2.rahtiapp.fi/products
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImlhdCI6MTczOTE3NTEzMywiZXhwIjoxNzQ0MzU5MTMzfQ.Vt2TlKYgM4oOcqJsno6cV5kXp8d9-dtts3pZb5_B0SU
 
-{
-  "user_id": 2,
-  "timestamp": "2025-01-01T12:00:00",
-  "order_price": 199.99,
-  "order_id": 2,
-  "order_items": [
-    {
-      "order_item_id": 2,
-      "product_id": 2,
-      "amount": 2,
-      "product_price": 99.99,
-      "product_name": "Test Product 1"
-    },
-    {
-      "order_item_id": 3,
-      "product_id": 3,
-      "amount": 1,
-      "product_price": 50.00,
-      "product_name": "Test Product 2"
-    },
-    {
-      "order_item_id": 4,
-      "product_id": 4,
-      "amount": 3,
-      "product_price": 30.00,
-      "product_name": "Test Product 3"
-    }
-  ]
-}
+// Hämta en produkt (sku)
+###
+GET https://product-service-cna-product-service.2.rahtiapp.fi/products/123-ABC
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImlhdCI6MTczOTE3NTEzMywiZXhwIjoxNzQ0MzU5MTMzfQ.Vt2TlKYgM4oOcqJsno6cV5kXp8d9-dtts3pZb5_B0SU
+

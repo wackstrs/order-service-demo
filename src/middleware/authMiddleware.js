@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+const jwt = require('jsonwebtoken');
 
 /**
  * Middleware för att verifiera JWT-token och skydda API-endpoints.
@@ -16,8 +16,8 @@ import jwt from "jsonwebtoken";
  * Exempel på användning:
  *  - router.get("/orders/:user_id", authenticateToken, getOrders);
  */
-export function authenticateToken(req, res, next) {
-    const token = req.headers["authorization"]; // Token skickas i Authorization-headern
+function authenticateToken(req, res, next) {
+    const token = req.headers["token"]; // Token skickas i Authorization-headern
 
     if (!token) {
         return res.status(401).json({ msg: "Åtkomst nekad. Ingen token tillhandahållen." });
@@ -26,8 +26,12 @@ export function authenticateToken(req, res, next) {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET); // Verifierar token med vår hemliga nyckel
         req.user = decoded; // Lägger till användardata i request-objektet
+        req.token = token; // Lägger till token i request-objektet
         next(); 
     } catch (err) {
+        console.error("Token verification error:", err); // Log error for debugging
         return res.status(403).json({ msg: "Ogiltig eller utgången token." });
     }
 }
+
+module.exports = authenticateToken;

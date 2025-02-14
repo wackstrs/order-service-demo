@@ -12,7 +12,7 @@ model orders {
   user_id     Int
   timestamp   DateTime  @default(now()) 
   order_price Decimal   @db.Decimal(10, 2)
-  order_items order_items[]
+  order_items order_items[] 
 }
 
 model order_items {
@@ -24,5 +24,5 @@ model order_items {
   product_price Decimal   @db.Decimal(10, 2) 
   total_price   Decimal   @db.Decimal(10, 2) 
 
-  order         orders    @relation(fields: [order_id], references: [order_id])
+  order         orders    @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
 }

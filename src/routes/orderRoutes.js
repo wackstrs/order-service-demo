@@ -5,15 +5,23 @@ const prisma = require("../config/prisma");
 // Importera middlewares
 const getCartData = require('../middleware/cart.js');
 const checkInventory = require('../middleware/inventory.js');
-const sendOrder = require('../middleware/sendOrder.js');
+const sendOrder = require("../middleware/sendOrder.js");
 
 /**
  * @swagger
- * /orders:
+ * /admin/orders:
  *   get:
- *     summary: Retrieve all orders
+ *     summary: Retrieve all orders (Admin access only)
  *     description: Fetches all orders from the database.
  *     tags: [Orders]
+ *     parameters:
+ *       - in: header
+ *         description: The JWT token used for authentication. Required to get orders.
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *           description: The JWT token for authentication.
  *     responses:
  *       200:
  *         description: Successfully retrieved orders.
@@ -43,7 +51,13 @@ const sendOrder = require('../middleware/sendOrder.js');
  *       500:
  *         description: Server error.
  */
-router.get("/orders", async (req, res) => {
+router.get("/admin/orders", async (req, res) => {
+  const role = req.user.role;
+
+  if (role !== 'admin') {
+    return res.status(403).json({ error: "Access denied. Admins only." });
+  }
+
   try {
     const orders = await prisma.orders.findMany({
       include: {
@@ -81,18 +95,18 @@ router.get("/orders", async (req, res) => {
 
 /**
  * @swagger
- * /orders/{user_id}:
+ * /orders:
  *   get:
  *     summary: Get orders for a specific user
  *     description: Fetches all orders related to a given user ID.
+ *     operationId: getOrdersForUser
  *     tags: [Orders]
  *     parameters:
- *       - in: path
- *         name: user_id
+ *       - name: token
+ *         in: header
  *         required: true
- *         schema:
- *           type: integer
- *         description: The user ID to fetch orders for.
+ *         description: The JWT token used for authentication.
+ *         type: string
  *     responses:
  *       200:
  *         description: Successfully retrieved orders.
@@ -118,8 +132,8 @@ router.get("/orders", async (req, res) => {
  *       500:
  *         description: Internal server error.
  */
-router.get("/orders/:user_id", async (req, res) => {
-  const { user_id } = req.params; // Hämtar user_id från URLen
+router.get("/orders", async (req, res) => {
+  const user_id = req.user.sub; // Hämtar user_id från JWTn
 
   try {
     const orders = await prisma.orders.findMany({
@@ -154,22 +168,12 @@ router.get("/orders/:user_id", async (req, res) => {
  *     operationId: createOrder
  *     tags:
  *       - Orders
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - user_id
- *               - token
- *             properties:
- *               user_id:
- *                 type: integer
- *                 example: 1
- *               token:
- *                 type: string
- *                 example: "jwt-token-here"
+ *     parameters:
+ *       - name: token
+ *         in: header
+ *         description: The JWT token used for authentication. Required for order creation.
+ *         required: true
+ *         type: string
  *     responses:
  *       201:
  *         description: Order created successfully
@@ -249,27 +253,18 @@ router.get("/orders/:user_id", async (req, res) => {
  */
 
 router.post("/orders", getCartData, checkInventory, async (req, res) => {
-  const { user_id, token } = req.body; // Extract user_id and token from body
-
-  if (!user_id || !token) {
-    return res.status(400).json({
-      error: "Missing user_id or token",
-      message: "Both user_id and token are required.",
-    });
-  }
+  const user_id = parseInt(req.user.sub, 10); // Hämtar user_id från req (req.user.sub är en string men sparas som int i vår prisma)
+  const cartData = req.cartData; // Hämtar cartData från middleware
 
   try {
-    // Retrieve cart data from middleware
-    const cartData = req.cartData;
-
-    // Calculate total price
+    // Beräkna totalpriset för ordern
     const order_price = cartData.cart.reduce((sum, item) => sum + item.total_price, 0);
 
-    // Create order in the database
+    // Skapa order i databasen
     const newOrder = await prisma.orders.create({
       data: {
-        user_id,       // User ID
-        order_price,   // Total order price
+        user_id,
+        order_price,
         order_items: {
           create: cartData.cart.map(item => ({
             product_id: String(item.product_id),
@@ -280,25 +275,99 @@ router.post("/orders", getCartData, checkInventory, async (req, res) => {
           })),
         },
       },
-      include: {
-        order_items: true, // Include the order items in the response
-      },
+      include: { order_items: true },
     });
 
-    // Send order to invoice and email services (commented for now)
-    // const orderSent = await sendOrder(newOrder);
-    // if (!orderSent) throw new Error("Failed to forward order.");
+    // Send the new order to invoice and email
+    const orderSent = await sendOrder(newOrder);
+    if (!orderSent) {
+      throw new Error("Kunde inte skicka beställningen vidare.");
+    }
 
-    return res.status(201).json({
-      message: "Order created successfully",
+    // Returnera success
+    res.status(201).json({
+      message: "Order skapad",
       order: newOrder,
     });
   } catch (error) {
-    return res.status(500).json({
-      error: "Failed to create order",
+    // Returnera error
+    res.status(500).json({
+      error: "Misslyckades att skapa order",
       message: error.message,
     });
   }
 });
+
+/**
+ * @swagger
+ * /admin/delete/{order_id}:
+ *   delete:
+ *     summary: Delete an order (Admin access only)
+ *     description: Deletes an order by its ID. Only accessible by admin users.
+ *     operationId: deleteOrder
+ *     tags:
+ *       - Orders
+ *     parameters:
+ *       - name: order_id
+ *         in: path
+ *         description: The ID of the order to delete
+ *         required: true
+ *         type: integer
+ *       - name: token
+ *         in: header
+ *         description: The JWT token used for authentication. Required for admin access.
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Successfully deleted order
+ *         schema:
+ *           type: object
+ *           properties:
+ *             msg:
+ *               type: string
+ *               example: "Successfully deleted order with ID: 123"
+ *       403:
+ *         description: Access denied. Admins only.
+ *         schema:
+ *           type: object
+ *           properties:
+ *             error:
+ *               type: string
+ *               example: "Access denied. Admins only."
+ *       500:
+ *         description: Failed to delete order
+ *         schema:
+ *           type: object
+ *           properties:
+ *             error:
+ *               type: string
+ *               example: "Failed to delete order"
+ *             message:
+ *               type: string
+ *               example: "Detailed error message"
+ */
+
+router.delete('/admin/delete/:order_id', async (req, res) => {
+  const { order_id } = req.params; // Hämtar order_id från URLen
+
+  // Kollar om användaren är en admin via dens JWT token
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: "Access denied. Admins only." });
+  }
+
+  try {
+    await prisma.orders.delete({
+      where: { order_id: parseInt(order_id) }
+    });
+
+    res.status(200).json({ msg: `Successfully deleted order with ID: ${order_id}` });
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to delete order",
+      message: error.message,
+    });
+  }
+})
 
 module.exports = router;

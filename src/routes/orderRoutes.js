@@ -285,7 +285,11 @@ router.post("/orders", getCartData, checkInventory, async (req, res) => {
 
     // Send order data to invoicing and email services
     const { invoiceStatus, invoiceMessage, emailStatus, emailMessage } = await sendOrder({
-      ...newOrder,
+      user_id: newOrder.user_id, // Ensure user_id is passed
+      order_price: newOrder.order_price,
+      order_id: newOrder.order_id,
+      order_items: newOrder.order_items, // Include order_items
+      timestamp: newOrder.timestamp, // Include timestamp
       email: userEmail, // Attach email directly in sendOrder
     });
 
@@ -307,6 +311,7 @@ router.post("/orders", getCartData, checkInventory, async (req, res) => {
     });
   }
 });
+
 
 
 

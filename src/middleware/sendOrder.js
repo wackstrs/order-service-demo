@@ -2,7 +2,6 @@ const INVOICING_SERVICE_URL = process.env.INVOICING_SERVICE_URL;
 const EMAIL_SERVICE_URL = process.env.EMAIL_SERVICE_URL;
 
 // invoicingAPI POST with order information
-
 async function sendOrder(newOrder) {
     const { user_id, order_price, order_id, order_items, timestamp, email } = newOrder; // Ensure email is provided
 
@@ -47,7 +46,21 @@ async function sendOrder(newOrder) {
         const emailPayload = {
             to: email, // Ensure email is passed through the request
             subject: 'Your Order Confirmation',
-            body: [shipmentData], // Wrap in array if needed by the email service
+            body: [{
+                orderId: String(order_id), // Make sure order_id is a string
+                userId: String(user_id),   // Ensure user_id is a string
+                timestamp: timestamp,      // Keep the timestamp as is
+                orderPrice: parseFloat(order_price), // Ensure order_price is a number
+                orderItems: order_items.map(item => ({
+                    order_item_id: item.order_item_id,
+                    order_id: String(item.order_id), // Ensure order_id is a string
+                    product_id: String(item.product_id), // Ensure product_id is a string
+                    product_name: item.product_name,
+                    amount: item.quantity,
+                    product_price: parseFloat(item.product_price), // Ensure product_price is a number
+                    total_price: parseFloat(item.total_price) // Ensure total_price is a number
+                }))
+            }]
         };
 
         console.log('emailPayload: ', emailPayload);

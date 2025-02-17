@@ -1,3 +1,12 @@
+const INVOICING_SERVICE_URL = process.env.INVOICING_SERVICE_URL;
+const EMAIL_SERVICE_URL = process.env.EMAIL_SERVICE_URL;
+
+// invoicingAPI POST med information om user_id och dens beställning
+
+// Skicka ordern till fakturering / invoicing
+// Information om beställningen kommer från getCartData funktion
+// dens return kan användas i /orders POST i orderRoutes för att köra sendOrder
+
 async function sendOrder(newOrder) {
     const { user_id, order_price, order_id, order_items, timestamp, email } = newOrder; // Make sure email is provided
 
@@ -76,3 +85,6 @@ async function sendOrder(newOrder) {
         };
     }
 }
+
+
+module.exports = sendOrder;

@@ -253,14 +253,13 @@ router.get("/orders", async (req, res) => {
  */
 
 router.post("/orders", getCartData, checkInventory, async (req, res) => {
-  const user_id = parseInt(req.user.sub, 10); // Hämtar user_id från req (req.user.sub är en string men sparas som int i vår prisma)
-  const cartData = req.cartData; // Hämtar cartData från middleware
+  const user_id = parseInt(req.user.sub, 10);
+  const cartData = req.cartData;
+  const userEmail = req.user.email; // Assuming user email is available in req.user
 
   try {
-    // Beräkna totalpriset för ordern
     const order_price = cartData.cart.reduce((sum, item) => sum + item.total_price, 0);
 
-    // Skapa order i databasen
     const newOrder = await prisma.orders.create({
       data: {
         user_id,
@@ -278,25 +277,31 @@ router.post("/orders", getCartData, checkInventory, async (req, res) => {
       include: { order_items: true },
     });
 
-    // Send the new order to invoice and email
-    const orderSent = await sendOrder(newOrder);
-    if (!orderSent) {
-      throw new Error("Kunde inte skicka beställningen vidare.");
-    }
+    // Add email to the newOrder object before sending it to sendOrder
+    const orderWithEmail = {
+      ...newOrder,
+      email: userEmail, // This is the important addition
+    };
 
-    // Returnera success
+    const { invoiceStatus, invoiceMessage, emailStatus, emailMessage } = await sendOrder(orderWithEmail);
+
     res.status(201).json({
-      message: "Order skapad",
+      message: "Order created successfully",
       order: newOrder,
+      invoiceStatus,
+      invoiceMessage,
+      emailStatus,
+      emailMessage,
     });
+
   } catch (error) {
-    // Returnera error
     res.status(500).json({
       error: "Misslyckades att skapa order",
       message: error.message,
     });
   }
 });
+
 
 /**
  * @swagger

@@ -1,41 +1,49 @@
-@apiURL = https://order-service-demo-git-order-service-demo.2.rahtiapp.fi
-@token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QgdXNlciIsImlhdCI6MTUxNjIzOTAyMn0.4ekKG3jv8-GMu4p6f6foD93fdjs-qNOHnMZSddus2ns
-
 // ORDER-SERVICE
 
 ###
 // hämta alla ordrar
-GET {{apiURL}}/api/orders
+GET {{$dotenv ORDER_SERVICE_URL}}/admin/orders
 Content-Type: application/json
+token: {{$dotenv ORDER_SERVICE_ADMIN_AUTH_TOKEN}}
 
 ###
-// Skapa en ny order (DEMO)
-POST https://order-service-demo-git-order-service-demo.2.rahtiapp.fi/api/orders
-Content-Type: application/json
-
-{
-  "user_id": 23,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QgdXNlciIsImlhdCI6MTUxNjIzOTAyMn0.4ekKG3jv8-GMu4p6f6foD93fdjs-qNOHnMZSddus2ns"
-}
+// hämta en användares alla ordrar
+GET {{$dotenv ORDER_SERVICE_URL}}/orders/
+token: {{$dotenv ORDER_SERVICE_USER_AUTH_TOKEN}}
 
 ###
 // Skapa en ny order
-POST https://order-service-api-order-service.2.rahtiapp.fi/api/orders
+POST {{$dotenv ORDER_SERVICE_URL}}/orders
 Content-Type: application/json
-
-{
-  "user_id": 1,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QgdXNlciIsImlhdCI6MTUxNjIzOTAyMn0.4ekKG3jv8-GMu4p6f6foD93fdjs-qNOHnMZSddus2ns"
-}
-###
-GET https://cart-service-git-cart-service.2.rahtiapp.fi/cart/1
-Content-Type: application/json
-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QgdXNlciIsImlhdCI6MTUxNjIzOTAyMn0.4ekKG3jv8-GMu4p6f6foD93fdjs-qNOHnMZSddus2ns
-
+token: {{$dotenv ORDER_SERVICE_USER_AUTH_TOKEN}}
 
 ###
-// Minska antal av en produkt i lager
-POST https://dev-inventory-service-inventory-service.2.rahtiapp.fi/inventory/decrease
+// Raderna en order
+DELETE {{$dotenv ORDER_SERVICE_URL}}/admin/delete/1
+Content-Type: application/json
+token: {{$dotenv ORDER_SERVICE_ADMIN_AUTH_TOKEN}}
+
+###
+// CART-SERVICE
+
+// Hämta en kundvagn
+###
+GET {{$dotenv CART_SERVICE_URL}}/cart/1
+Content-Type: application/json
+token: {{$dotenv ORDER_SERVICE_USER_AUTH_TOKEN}}
+
+
+// INVENTORY-SERVICE
+
+// Hämta lagersaldo för alla produkter
+###
+GET {{$dotenv INVENTORY_SERVICE_URL}}/inventory
+Content-Type: application/json
+
+
+// Minska lagersaldo för produkter
+###
+POST {{$dotenv INVENTORY_SERVICE_URL}}/inventory/decrease
 
 {
   "email": "order-service@test.com",
@@ -43,33 +51,25 @@ POST https://dev-inventory-service-inventory-service.2.rahtiapp.fi/inventory/dec
     {
       "productCode": "0001",
       "quantity": 1
+    },
+    {
+      "productCode": "0002",
+      "quantity": 2
     }
   ]
 }
-###
-
-// Kontrollera lagersaldo för alla produkter
-GET https://dev-inventory-service-inventory-service.2.rahtiapp.fi/inventory
-Content-Type: application/json
-
-
-###
-GET https://order-service-demo-git-order-service-demo.2.rahtiapp.fi/api/orders/4
-Content-Type: application/json
-
-
 
 
 // INVOICING-SERVICE
 
 // Hämta alla fakturor
 ###
-GET https://invoicing-service-git-invoicing-service.2.rahtiapp.fi/orders
+GET {{$dotenv INVOICING_SERVICE_URL}}/orders
 Content-Type: application/json
 
 // Skapa en ny faktura
 ###
-POST https://invoicing-service-git-invoicing-service.2.rahtiapp.fi/orders
+POST {{$dotenv INVOICING_SERVICE_URL}}/orders
 Content-Type: application/json
 
 {
@@ -95,19 +95,19 @@ Content-Type: application/json
     ]
 }
 
-
-
 // PRODUCT_SERVICE
 
 // Hämta alla produkter
 ###
-GET https://product-service-cna-product-service.2.rahtiapp.fi/products
+GET {{$dotenv PRODUCT_SERVICE_URL}}/products
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImlhdCI6MTczOTE3NTEzMywiZXhwIjoxNzQ0MzU5MTMzfQ.Vt2TlKYgM4oOcqJsno6cV5kXp8d9-dtts3pZb5_B0SU
+Authorization: Bearer {{$dotenv PRODUCT_SERVICE_AUTH_TOKEN}}
+
 
 // Hämta en produkt (sku)
 ###
-GET https://product-service-cna-product-service.2.rahtiapp.fi/products/123-ABC
+GET {{$dotenv PRODUCT_SERVICE_URL}}/products/101-USL
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImlhdCI6MTczOTE3NTEzMywiZXhwIjoxNzQ0MzU5MTMzfQ.Vt2TlKYgM4oOcqJsno6cV5kXp8d9-dtts3pZb5_B0SU
+Authorization: Bearer {{$dotenv PRODUCT_SERVICE_AUTH_TOKEN}}
+
 

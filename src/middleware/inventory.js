@@ -14,8 +14,26 @@ const checkInventory = async (req, res, next) => {
             }))
         };
 
-          // Skickar en POST request till inventory service för att minska lagersaldot
-          const inventoryResponse = await fetch(INVENTORY_SERVICE_URL, {
+        // First, make a pre-check for stock before sending to the inventory service
+        const inventoryCheckResponse = await fetch(INVENTORY_SERVICE_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(inventoryRequest),
+        });
+
+        // If the response indicates that there is not enough stock for any product, return an error
+        if (!inventoryCheckResponse.ok) {
+            const errorData = await inventoryCheckResponse.json();
+            return res.status(400).json({
+                error: errorData.error || "Uppdatering av lagersaldo misslyckades",
+                message: errorData.message || "Går inte att uppdatera lagersaldo",
+            });
+        }
+
+        // Now send the request to the inventory service to decrease stock (the actual action)
+        const inventoryResponse = await fetch(INVENTORY_SERVICE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -5,19 +5,17 @@ const checkInventory = async (req, res, next) => {
     const cartData = req.cartData; // cartData från föregående middleware
 
     try {
-        // Payload som ska skickas till inventory service, hårdkodat för tillfället
+        // Dynamiskt skapa payload för inventory service baserat på cartData
         const inventoryRequest = {
-            email: "order-service@test.com", // Hårdkodat
-            items: [
-                {
-                    productCode: "0001", // Hårdkodat, ska vara product_id från cart
-                    quantity: 1 // Hårdkodat, ska vara quantity från cart
-                }
-            ]
+            email: req.body.email || "order-service@test.com", // Ta email från request body eller använd default
+            items: cartData.cart.map(item => ({
+                productCode: String(item.product_id), // Använd product_id från cart
+                quantity: item.quantity // Använd quantity från cart
+            }))
         };
 
-        // Skickar en POST request till inventory service för att minska lagersaldot
-        const inventoryResponse = await fetch(INVENTORY_SERVICE_URL, {
+          // Skickar en POST request till inventory service för att minska lagersaldot
+          const inventoryResponse = await fetch(INVENTORY_SERVICE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

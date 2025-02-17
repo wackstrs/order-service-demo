@@ -256,11 +256,13 @@ router.get("/orders", async (req, res) => {
 router.post("/orders", getCartData, checkInventory, async (req, res) => {
   const user_id = parseInt(req.user.sub, 10);
   const cartData = req.cartData;
-  const userEmail = req.user.email; // Assuming user email is available in req.user
+  const userEmail = req.user.email;
 
   try {
+    // Calculate order price
     const order_price = cartData.cart.reduce((sum, item) => sum + item.total_price, 0);
 
+    // Create the new order in the database
     const newOrder = await prisma.orders.create({
       data: {
         user_id,
@@ -278,14 +280,16 @@ router.post("/orders", getCartData, checkInventory, async (req, res) => {
       include: { order_items: true },
     });
 
-    // Add email to the newOrder object before sending it to sendOrder
-    const orderWithEmail = {
+    // Log the newly created order for debugging
+    console.log('New Order Created:', newOrder);
+
+    // Send order data to invoicing and email services
+    const { invoiceStatus, invoiceMessage, emailStatus, emailMessage } = await sendOrder({
       ...newOrder,
-      email: userEmail, // This is the important addition
-    };
+      email: userEmail, // Attach email directly in sendOrder
+    });
 
-    const { invoiceStatus, invoiceMessage, emailStatus, emailMessage } = await sendOrder(orderWithEmail);
-
+    // Respond with the order details and status
     res.status(201).json({
       message: "Order created successfully",
       order: newOrder,
@@ -296,12 +300,14 @@ router.post("/orders", getCartData, checkInventory, async (req, res) => {
     });
 
   } catch (error) {
+    console.error('Error creating order:', error);
     res.status(500).json({
-      error: "Misslyckades att skapa order",
+      error: "Failed to create order",
       message: error.message,
     });
   }
 });
+
 
 
 /**

@@ -259,8 +259,8 @@ router.post("/orders", getCartData, checkInventory, async (req, res) => {
   const email = req.body.email; // Take the email from the request body
 
   try {
-    // Calculate order price
-    const order_price = cartData.cart.reduce((sum, item) => sum + item.total_price, 0);
+    // Calculate order price and format it to 2 decimals
+    const order_price = cartData.cart.reduce((sum, item) => sum + item.total_price, 0).toFixed(2);
 
     // Create the new order in the database
     const newOrder = await prisma.orders.create({

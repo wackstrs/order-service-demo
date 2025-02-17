@@ -256,7 +256,7 @@ router.get("/orders", async (req, res) => {
 router.post("/orders", getCartData, checkInventory, async (req, res) => {
   const user_id = parseInt(req.user.sub, 10);
   const cartData = req.cartData;
-  const userEmail = req.user.email;
+  const email = req.body.email; // Take the email from the request body
 
   try {
     // Calculate order price
@@ -290,7 +290,7 @@ router.post("/orders", getCartData, checkInventory, async (req, res) => {
       order_id: newOrder.order_id,
       order_items: newOrder.order_items, // Include order_items
       timestamp: newOrder.timestamp, // Include timestamp
-      email: userEmail, // Attach email directly in sendOrder
+      email: email, // Pass the email here
     });
 
     // Respond with the order details and status

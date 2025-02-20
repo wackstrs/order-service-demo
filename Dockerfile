@@ -1,7 +1,7 @@
 # Use the official slim Node.js image from the Docker Hub as the base image
 FROM node:22-slim
 
-# Create and change to the app directory
+# Create and change to the app directoryyy
 WORKDIR /app
 
 # Copy package.json and package-lock.json to the working directory first (for caching)

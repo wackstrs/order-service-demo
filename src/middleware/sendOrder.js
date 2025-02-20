@@ -17,6 +17,7 @@ async function sendOrder(newOrder) {
                 product_id: Number(item.product_id),
                 amount: item.quantity,
                 product_price: item.product_price,
+                product_name: item.product_name,  // Add product_name here
             })),
         };
 
@@ -40,8 +41,8 @@ async function sendOrder(newOrder) {
 
         // --- EMAIL PAYLOAD ---
         const emailPayload = {
-            to: "test@email.com", // Optional: Replace with user's email if available in `newOrder`
-            subject: "Tilausvahvistus", // This is the Finnish word for "Order Confirmation"
+            to: user_email,  // Use the dynamic email passed in the body
+            subject: "Order Confirmation", // This is the Finnish word for "Order Confirmation"
             body: [
                 {
                     orderId: order_id,

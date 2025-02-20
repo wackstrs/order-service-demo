@@ -254,6 +254,12 @@ router.get("/orders", async (req, res) => {
 router.post("/orders", getCartData, checkInventory, async (req, res) => {
   const user_id = parseInt(req.user.sub, 10); // Hämtar user_id från req (req.user.sub är en string men sparas som int i vår prisma)
   const cartData = req.cartData; // Hämtar cartData från middleware
+  const user_email = req.body.email; // Retrieve email from request body
+
+  if (!user_email) {
+    return res.status(400).json({ error: "Email is required in the request body" });
+}
+
 
   try {
     // Beräkna totalpriset för ordern

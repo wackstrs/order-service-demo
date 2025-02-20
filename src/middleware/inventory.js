@@ -1,11 +1,16 @@
 const INVENTORY_SERVICE_URL = `${process.env.INVENTORY_SERVICE_URL}/inventory/decrease`;
 
 const checkInventory = async (req, res, next) => {
-    const cartData = req.cartData;
+    const cartData = req.cartData; // cartData från föregående middleware
+    const user_email = req.body.email; // Get email from request body
+
+    if (!user_email) {
+        return res.status(400).json({ error: "Email is required in the request body" });
+    }
 
     try {
         const inventoryRequest = {
-            email: "order-service@test.com",
+            email: user_email,
             items: cartData.cart.map(item => ({
                 productCode: String(item.product_id),
                 quantity: item.quantity

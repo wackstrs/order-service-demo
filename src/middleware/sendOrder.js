@@ -10,28 +10,26 @@ async function sendOrder(newOrder) {
     const { user_id, order_price, order_id, order_items, timestamp } = newOrder;
 
     try {
-        const shipmentData = { // Del av denna data skapas i vår POST /orders
-            user_id,          
-            timestamp,        
-            order_price,      
-            order_id,         
+        const shipmentData = {
+            user_id,
+            timestamp,
+            order_price,
+            order_id,
             order_items: order_items.map(item => ({
                 order_item_id: item.order_item_id,
-                product_id: Number(item.product_id), // BORDE VARA STRING! Men invoicing APIn kräver atm en INT
+                order_id: order_id, // <-- You need to include this in email payload
+                product_id: Number(item.product_id), // Still converting to number for invoicing
                 amount: item.quantity,
                 product_price: item.product_price,
-                product_name: item.product_name
-            }))
+                product_name: item.product_name,
+                total_price: item.total_price // <-- This is required in email payload
+            })),
         };
 
-        // Send to invoicing
+        // --- INVOICING ---
         const resInvoice = await fetch(INVOICING_SERVICE_URL, {
-            method: 'POST', // We're sending data to the server
-            headers: {
-                // Tells the server that we are sending JSON
-                'Content-Type': 'application/json'
-            },
-            // Convert the data object into JSON
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(shipmentData)
         });
 
@@ -39,28 +37,32 @@ async function sendOrder(newOrder) {
         let invoiceMessage = "Failed to send order data to invoicing.";
 
         if (resInvoice.ok) {
-            // Updaterar variablerna om invoice är successfull
             invoiceStatus = "success";
             invoiceMessage = "Order data sent to invoicing successfully.";
         }
 
-        let emailStatus = "failed";
-        let emailMessage = "Failed to send order data to email.";
+        // --- EMAIL ---
+        const emailPayload = {
+            to: "test@email.com", // You can replace this dynamically later if needed
+            subject: "Order Confirmation",
+            body: [shipmentData], // Email service expects this inside an array
+        };
 
-        // Send to email
         const resEmail = await fetch(EMAIL_SERVICE_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(shipmentData) // Antar att email använder samma format som invoice
+            body: JSON.stringify(emailPayload)
         });
 
+        let emailStatus = "failed";
+        let emailMessage = "Failed to send order confirmation email.";
+
         if (resEmail.ok) {
-            // Updaterar variablerna om email är successfull
             emailStatus = "success";
-            emailMessage = "Order sent to email successfully.";
+            emailMessage = "Order confirmation email sent successfully.";
         }
 
-        // Returnerar responsen från både email och invoicing
+        // --- RETURN STATUS ---
         return {
             invoiceStatus,
             invoiceMessage,

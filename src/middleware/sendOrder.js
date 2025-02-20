@@ -1,5 +1,5 @@
-const INVOICING_SERVICE_URL = process.env.INVOICING_SERVICE_URL;
-const EMAIL_SERVICE_URL = process.env.EMAIL_SERVICE_URL;
+const INVOICING_SERVICE_URL = `${process.env.INVOICING_SERVICE_URL}/orders`;
+const EMAIL_SERVICE_URL = `${process.env.EMAIL_SERVICE_URL}/order`;
 
 // invoicingAPI POST med information om user_id och dens beställning
 

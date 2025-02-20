@@ -1,4 +1,4 @@
-const INVENTORY_SERVICE_URL = process.env.INVENTORY_SERVICE_URL;
+const INVENTORY_SERVICE_URL = `${process.env.INVENTORY_SERVICE_URL}/inventory/decrease`;
 
 const checkInventory = async (req, res, next) => {
     const cartData = req.cartData;

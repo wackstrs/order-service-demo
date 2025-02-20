@@ -1,5 +1,5 @@
-# Use the official Node.js image from the Docker Hub as the base image
-FROM node:22
+# Use the official slim Node.js image from the Docker Hub as the base image
+FROM node:22-slim
 
 # Create and change to the app directory
 WORKDIR /app
@@ -9,8 +9,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Install the app dependencies
-RUN npm install
-RUN npm install -g @prisma/client
+RUN npm install && npm install -g @prisma/client
 
 # Copy the rest of the application code to the working directory
 COPY . .

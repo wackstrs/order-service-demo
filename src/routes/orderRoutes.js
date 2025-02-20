@@ -7,7 +7,6 @@ const getCartData = require('../middleware/cart.js');
 const checkInventory = require('../middleware/inventory.js');
 const sendOrder = require("../middleware/sendOrder.js");
 
-
 /**
  * @swagger
  * /admin/orders:
@@ -80,21 +79,6 @@ router.get("/admin/orders", async (req, res) => {
 });
 
 /**
- * Hämtar alla ordrar för en specifik användare.
- * 
- * Args:
- *  - user_id (int): Unikt user_id som hämtas från URL-parametern
- * 
- * Returns:
- *  - (Array | Object): En lista med ordrar inklusive orderdetaljer om de finns
- *  - (Object): Ett felmeddelande om inga ordrar hittas eller om ett serverfel uppstår
- * 
- * Exempel:
- *  - GET /orders/101
- *  - Response: [{ order_id: 1, user_id: 101, order_price: 299.99, order_items: [...] }, ...]
- */
-
-/**
  * @swagger
  * /orders:
  *   get:
@@ -165,7 +149,7 @@ router.get("/orders", async (req, res) => {
  * /orders:
  *   post:
  *     summary: Create a new order
- *     description: Fetches cart data, checks inventory, and creates an order.
+ *     description: Fetches cart data, checks inventory, creates an order, and attempts to send order data to the invoicing and email services.
  *     operationId: createOrder
  *     tags:
  *       - Orders
@@ -177,7 +161,7 @@ router.get("/orders", async (req, res) => {
  *         type: string
  *     responses:
  *       201:
- *         description: Order created successfully
+ *         description: Order created successfully, but invoicing and/or email services may have failed.
  *         content:
  *           application/json:
  *             schema:
@@ -225,6 +209,20 @@ router.get("/orders", async (req, res) => {
  *                             type: number
  *                             format: float
  *                             example: 99.98
+ *                 invoiceStatus:
+ *                   type: string
+ *                   enum: [success, failed]
+ *                   example: "failed"
+ *                 invoiceMessage:
+ *                   type: string
+ *                   example: "Failed to send order data to invoicing."
+ *                 emailStatus:
+ *                   type: string
+ *                   enum: [success, failed]
+ *                   example: "success"
+ *                 emailMessage:
+ *                   type: string
+ *                   example: "Order sent to email successfully."
  *       400:
  *         description: Missing user_id or token
  *         content:
@@ -254,15 +252,14 @@ router.get("/orders", async (req, res) => {
  */
 
 router.post("/orders", getCartData, checkInventory, async (req, res) => {
-  const user_id = parseInt(req.user.sub, 10);
-  const cartData = req.cartData;
-  const email = req.body.email; // Take the email from the request body
+  const user_id = parseInt(req.user.sub, 10); // Hämtar user_id från req (req.user.sub är en string men sparas som int i vår prisma)
+  const cartData = req.cartData; // Hämtar cartData från middleware
 
   try {
-    // Calculate order price
+    // Beräkna totalpriset för ordern
     const order_price = cartData.cart.reduce((sum, item) => sum + item.total_price, 0);
 
-    // Create the new order in the database
+    // Skapa order i databasen
     const newOrder = await prisma.orders.create({
       data: {
         user_id,
@@ -280,20 +277,10 @@ router.post("/orders", getCartData, checkInventory, async (req, res) => {
       include: { order_items: true },
     });
 
-    // Log the newly created order for debugging
-    console.log('New Order Created:', newOrder);
+    // Skickar newOrder till sendOrder och får tillbaks invoiceStatus, invoiceMessage, emailStatus, emailMessage
+    const { invoiceStatus, invoiceMessage, emailStatus, emailMessage } = await sendOrder(newOrder);
 
-    // Send order data to invoicing and email services
-    const { invoiceStatus, invoiceMessage, emailStatus, emailMessage } = await sendOrder({
-      user_id: newOrder.user_id, // Ensure user_id is passed
-      order_price: newOrder.order_price,
-      order_id: newOrder.order_id,
-      order_items: newOrder.order_items, // Include order_items
-      timestamp: newOrder.timestamp, // Include timestamp
-      email: email, // Attach email directly in sendOrder
-    });
-
-    // Respond with the order details and status
+    // Returnerar success med invoice och email status
     res.status(201).json({
       message: "Order created successfully",
       order: newOrder,
@@ -304,16 +291,13 @@ router.post("/orders", getCartData, checkInventory, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error creating order:', error);
+    // Returnera error
     res.status(500).json({
-      error: "Failed to create order",
+      error: "Misslyckades att skapa order",
       message: error.message,
     });
   }
 });
-
-
-
 
 /**
  * @swagger

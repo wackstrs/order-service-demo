@@ -19,7 +19,7 @@ token: {{$dotenv ORDER_SERVICE_USER_AUTH_TOKEN}}
 
 ###
 // Raderna en order
-DELETE {{$dotenv ORDER_SERVICE_URL}}/admin/delete/1
+DELETE {{$dotenv ORDER_SERVICE_URL}}/admin/delete/20
 Content-Type: application/json
 token: {{$dotenv ORDER_SERVICE_ADMIN_AUTH_TOKEN}}
 
@@ -28,7 +28,7 @@ token: {{$dotenv ORDER_SERVICE_ADMIN_AUTH_TOKEN}}
 
 // Hämta en kundvagn
 ###
-GET {{$dotenv CART_SERVICE_URL}}/cart/1
+GET {{$dotenv CART_SERVICE_URL}}/cart/333
 Content-Type: application/json
 token: {{$dotenv ORDER_SERVICE_USER_AUTH_TOKEN}}
 
@@ -44,9 +44,10 @@ Content-Type: application/json
 // Minska lagersaldo för produkter
 ###
 POST {{$dotenv INVENTORY_SERVICE_URL}}/inventory/decrease
+Content-Type: application/json
 
 {
-  "email": "order-service@test.com",
+  "email": "test-user@test.com",
   "items": [
     {
       "productCode": "0001",
@@ -54,7 +55,11 @@ POST {{$dotenv INVENTORY_SERVICE_URL}}/inventory/decrease
     },
     {
       "productCode": "0002",
-      "quantity": 2
+      "quantity": 1
+    },
+    {
+      "productCode": "0003",
+      "quantity": 101
     }
   ]
 }
@@ -116,3 +121,46 @@ Authorization: Bearer {{$dotenv PRODUCT_SERVICE_AUTH_TOKEN}}
 POST {{$dotenv ORDER_SERVICE_URL_DEMO}}/orders
 Content-Type: application/json
 token: {{$dotenv ORDER_SERVICE_USER_AUTH_TOKEN}}
+
+{
+  "email": "wackstrs@arcada.fi"
+}
+
+
+###
+// Testa att skicka en order till email-service
+POST {{$dotenv EMAIL_SERVICE_URL}}/order
+Content-Type: application/json
+
+{
+  "to": "wackstrs@arcada.fi",
+  "subject": "Tilausvahvistus",
+  "body": [
+    {
+      "orderId": 98765,
+      "userId": 45678,
+      "timestamp": "2025-02-18T15:30:00Z",
+      "orderPrice": 47.50,
+      "orderItems": [
+        {
+          "order_item_id": 1,
+          "order_id": 98765,
+          "product_id": 201,
+          "product_name": "Pohjoisen Pilsneri",
+          "amount": 2,
+          "product_price": 5.50,
+          "total_price": 11.00
+        },
+        {
+          "order_item_id": 2,
+          "order_id": 98765,
+          "product_id": 202,
+          "product_name": "Saimaa Savu Ale",
+          "amount": 1,
+          "product_price": 6.50,
+          "total_price": 6.50
+        }
+      ]
+    }
+  ]
+}

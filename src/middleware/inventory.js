@@ -8,12 +8,10 @@ const checkInventory = async (req, res, next) => {
         // Payload som ska skickas till inventory service, hårdkodat för tillfället
         const inventoryRequest = {
             email: "order-service@test.com", // Hårdkodat
-            items: [
-                {
-                    productCode: "0001", // Hårdkodat, ska vara product_id från cart
-                    quantity: 1 // Hårdkodat, ska vara quantity från cart
-                }
-            ]
+            items: cartData.cart.map(item => ({
+                productCode: String(item.product_id),
+                quantity: item.quantity
+            })),
         };
 
         // Skickar en POST request till inventory service för att minska lagersaldot
@@ -25,7 +23,6 @@ const checkInventory = async (req, res, next) => {
             body: JSON.stringify(inventoryRequest),
         });
 
-        // Om responsen från inventory service inte är ok, returnera ett felmeddelande
         if (!inventoryResponse.ok) {
             const errorData = await inventoryResponse.json();
             return res.status(400).json({
@@ -34,11 +31,9 @@ const checkInventory = async (req, res, next) => {
             });
         }
 
-        next(); // Om allt ok, fortsätt till nästa middleware
+        next(); // Om allt är ok, fortsätt till nästa middleware
     } catch (error) {
-        console.error(error);
-
-        // Om någonting annat misslyckas, returnera ett felmeddelande
+        console.error("Fel vid kontroll av lager", error);
         return res.status(500).json({
             error: "Internt serverfel",
             message: "Misslyckades med att validera eller uppdatera lagersaldo",

@@ -1,7 +1,7 @@
 const INVOICING_SERVICE_URL = `${process.env.INVOICING_SERVICE_URL}/orders`;
 const EMAIL_SERVICE_URL = `${process.env.EMAIL_SERVICE_URL}/order`;
 
-async function sendOrder(newOrder, user_email) {  // Ensure user_email is passed to the function
+async function sendOrder(newOrder, user_email) {
     const { user_id, order_price, order_id, order_items, timestamp } = newOrder;
 
     try {
@@ -17,7 +17,7 @@ async function sendOrder(newOrder, user_email) {  // Ensure user_email is passed
                 product_id: Number(item.product_id),
                 amount: item.quantity,
                 product_price: item.product_price,
-                product_name: item.product_name,  // Add product_name here
+                product_name: item.product_name,
             })),
         };
 
@@ -35,23 +35,24 @@ async function sendOrder(newOrder, user_email) {  // Ensure user_email is passed
             : `Failed to send order data to invoicing. Status: ${resInvoice.status}`;
 
         if (!resInvoice.ok) {
-            const invoiceErrorData = await resInvoice.json();  // Assuming the error is in JSON format
+            const invoiceErrorData = await resInvoice.text(); // More robust for error handling
             console.error('INVOICING service response:', invoiceErrorData);
+            invoiceMessage += ` | Response: ${invoiceErrorData}`;
         }
 
         // --- EMAIL PAYLOAD ---
         const emailPayload = {
-            to: user_email,  // Use the dynamic email passed in the body
-            subject: "Tilausvahvistus", // Finnish for "Order Confirmation"
+            to: user_email,
+            subject: "Tilausvahvistus",
             body: [
                 {
                     orderId: order_id,
                     userId: user_id,
-                    timestamp: timestamp,
+                    timestamp,
                     orderPrice: order_price,
                     orderItems: order_items.map(item => ({
                         order_item_id: item.order_item_id,
-                        order_id: order_id,
+                        order_id,
                         product_id: item.product_id,
                         product_name: item.product_name,
                         amount: item.quantity,
@@ -76,8 +77,9 @@ async function sendOrder(newOrder, user_email) {  // Ensure user_email is passed
             : `Failed to send order confirmation email. Status: ${resEmail.status}`;
 
         if (!resEmail.ok) {
-            const emailErrorData = await resEmail.json();  // Assuming the error is in JSON format
+            const emailErrorData = await resEmail.text(); // More robust for error handling
             console.error('EMAIL service response:', emailErrorData);
+            emailMessage += ` | Response: ${emailErrorData}`;
         }
 
         // --- RETURN STATUS ---
@@ -87,7 +89,6 @@ async function sendOrder(newOrder, user_email) {  // Ensure user_email is passed
             emailStatus,
             emailMessage,
         };
-
     } catch (error) {
         console.error('Error sending order data:', error);
         return {

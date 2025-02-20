@@ -1,7 +1,7 @@
 const INVOICING_SERVICE_URL = `${process.env.INVOICING_SERVICE_URL}/orders`;
 const EMAIL_SERVICE_URL = `${process.env.EMAIL_SERVICE_URL}/order`;
 
-async function sendOrder(newOrder) {
+async function sendOrder(newOrder, user_email) {  // Ensure user_email is passed to the function
     const { user_id, order_price, order_id, order_items, timestamp } = newOrder;
 
     try {
@@ -35,14 +35,14 @@ async function sendOrder(newOrder) {
             : `Failed to send order data to invoicing. Status: ${resInvoice.status}`;
 
         if (!resInvoice.ok) {
-            const invoiceErrorData = await resInvoice.text();
+            const invoiceErrorData = await resInvoice.json();  // Assuming the error is in JSON format
             console.error('INVOICING service response:', invoiceErrorData);
         }
 
         // --- EMAIL PAYLOAD ---
         const emailPayload = {
             to: user_email,  // Use the dynamic email passed in the body
-            subject: "Order Confirmation", // This is the Finnish word for "Order Confirmation"
+            subject: "Tilausvahvistus", // Finnish for "Order Confirmation"
             body: [
                 {
                     orderId: order_id,
@@ -76,7 +76,7 @@ async function sendOrder(newOrder) {
             : `Failed to send order confirmation email. Status: ${resEmail.status}`;
 
         if (!resEmail.ok) {
-            const emailErrorData = await resEmail.text();
+            const emailErrorData = await resEmail.json();  // Assuming the error is in JSON format
             console.error('EMAIL service response:', emailErrorData);
         }
 

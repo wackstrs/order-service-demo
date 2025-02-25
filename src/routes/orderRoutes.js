@@ -277,7 +277,7 @@ router.post("/orders", getCartData, getProductData, checkInventory, async (req, 
         order_price,  
         order_items: {
           create: cartData.cart.map(item => ({
-            product_id: String(item.product_id),
+            product_id: item.product_id,
             quantity: item.quantity,
             product_price: item.product_price,  // No need for fallback
             product_name: item.product_name,  

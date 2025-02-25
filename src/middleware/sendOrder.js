@@ -26,7 +26,7 @@ async function sendOrder(newOrder, user_email) {
             order_id,
             order_items: order_items.map(item => ({
                 order_item_id: item.order_item_id,
-                product_id: Number(item.product_id), // Ensure it's an INT as per invoicing API requirement
+                product_id: item.product_id, // Ensure it's an INT as per invoicing API requirement
                 amount: item.quantity,
                 product_price: item.product_price,
                 product_name: item.product_name,

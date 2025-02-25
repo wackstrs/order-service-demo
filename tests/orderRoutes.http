@@ -8,7 +8,7 @@ token: {{$dotenv ORDER_SERVICE_ADMIN_AUTH_TOKEN}}
 
 ###
 // hämta en användares alla ordrar
-GET {{$dotenv ORDER_SERVICE_URL}}/orders/
+GET {{$dotenv ORDER_SERVICE_URL_DEMO}}/orders/
 Content-Type: application/json
 token: {{$dotenv ORDER_SERVICE_USER_AUTH_TOKEN}}
 
@@ -113,7 +113,7 @@ Authorization: Bearer {{$dotenv PRODUCT_SERVICE_AUTH_TOKEN}}
 
 // Hämta en produkt (sku)
 ###
-GET {{$dotenv PRODUCT_SERVICE_URL}}/products/10000-MXL
+GET {{$dotenv PRODUCT_SERVICE_URL}}/products/10004-FIL
 Content-Type: application/json
 Authorization: Bearer {{$dotenv PRODUCT_SERVICE_AUTH_TOKEN}}
 

@@ -11,44 +11,57 @@ const getProductData = async (req, res, next) => {
         });
     }
 
+
     try {
-        const productIds = cartData.cart.map(item => item.product_id); // Collect product IDs
-        const response = await fetch(`${PRODUCT_SERVICE_URL}/products`, {
-            method: "GET",
-            headers: {
-                "Authorization": `Bearer ${token.trim()}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ product_ids: productIds }) // Send all IDs in a single request
-        });
+        const getProductDetails = async (item) => {
+            try {
+                // Fetch product data with authentication
+                const response = await fetch(`${PRODUCT_SERVICE_URL}/products/${item.product_id}`, {
+                    method: "GET",
+                    headers: {
+                        "Authorization": `Bearer ${token.trim()}`, // Send the token in headers
+                        "Content-Type": "application/json"
+                    }
+                });
 
-        if (!response.ok) {
-            throw new Error(`Failed to fetch products: ${response.status}`);
-        }
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch product data, status: ${response.status}`);
+                }
 
-        const data = await response.json();
+                const data = await response.json();
 
-        // Now match products to cart items
-        const updatedCartData = cartData.cart.map(item => {
-            const product = data.products.find(p => p.id === item.product_id);
-            return {
-                ...item,
-                product_price: product.price,
-                total_price: product.price * item.quantity,
-                product_name: product.name,
-                product_description: product.description,
-                product_image: product.image,
-                product_country: product.country,
-                product_category: product.category
-            };
-        });
+                if (!data || !data.product || data.product.price == null) {
+                    throw new Error(`Missing product data or price for ${item.product_id}`);
+                }
 
-        req.cartData.cart = updatedCartData;
+                const product_price = parseFloat(data.product.price); // Ensure price is a number
+                const total_price = product_price * item.quantity;
+
+                return {
+                    ...item,
+                    product_price,
+                    total_price,
+                    product_name: data.product?.name || "Okänd produkt",
+                    product_description: data.product?.description || 'Ingen beskrivning tillgänglig',
+                    product_image: data.product?.image || '/default-image.jpg',
+                    product_country: data.product?.country || 'Okänt land',
+                    product_category: data.product?.category || 'Okategoriserad'
+                };
+
+            } catch (err) {
+                console.error(`Error fetching product data for ${item.product_id}:`, err.message);
+                throw new Error(`Failed to fetch product data for ${item.product_id}: ${err.message}`);
+            }
+        };
+
+        // Fetch and update product data for all cart items
+        req.cartData.cart = await Promise.all(cartData.cart.map(getProductDetails));
+
         next();
     } catch (error) {
-        console.error("Error fetching product data:", error);
+        console.error("Error fetching product data:", error.message);
         return res.status(500).json({
-            error: "Failed to fetch product data",
+            error: "Product data fetch failed",
             message: error.message
         });
     }

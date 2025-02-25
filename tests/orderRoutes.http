@@ -55,11 +55,11 @@ Content-Type: application/json
     },
     {
       "productCode": "0002",
-      "quantity": 1
+      "quantity": 149
     },
     {
       "productCode": "0003",
-      "quantity": 101
+      "quantity": 1
     }
   ]
 }
@@ -127,13 +127,14 @@ token: {{$dotenv ORDER_SERVICE_USER_AUTH_TOKEN}}
 }
 
 
+
 ###
 // Testa att skicka en order till email-service
 POST {{$dotenv EMAIL_SERVICE_URL}}/order
 Content-Type: application/json
 
 {
-  "to": "wackstrs@arcada.fi",
+  "to": "wackstrs@gmail.com",
   "subject": "Tilausvahvistus",
   "body": [
     {

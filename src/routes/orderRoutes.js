@@ -4,6 +4,7 @@ const prisma = require("../config/prisma");
 
 // Importera middlewares
 const getCartData = require('../middleware/cart.js');
+const fetchProductData = require('../middleware/product.js');
 const checkInventory = require('../middleware/inventory.js');
 const sendOrder = require("../middleware/sendOrder.js");
 
@@ -251,7 +252,7 @@ router.get("/orders", async (req, res) => {
  *                   example: "An unexpected error occurred while creating the order"
  */
 
-router.post("/orders", getCartData, checkInventory, async (req, res) => {
+router.post("/orders", getCartData, fetchProductData, checkInventory, async (req, res) => {
   const user_id = parseInt(req.user.sub, 10);
   const cartData = req.cartData;
   const user_email = req.body.email;
@@ -263,17 +264,22 @@ router.post("/orders", getCartData, checkInventory, async (req, res) => {
   try {
     const order_price = cartData.cart.reduce((sum, item) => sum + item.total_price, 0);
 
+    // Create the order in the database
     const newOrder = await prisma.orders.create({
       data: {
         user_id,
         order_price,
         order_items: {
           create: cartData.cart.map(item => ({
-            product_id: String(item.product_id),
+            product_id: String(item.product_id),  // Store product ID
             quantity: item.quantity,
-            product_price: item.price,
-            product_name: item.product_name,
+            product_price: item.price,  // Store product price
+            product_name: item.product_name,  // Store product name
             total_price: item.total_price,
+            product_description: item.product_description,  // Description from product service
+            product_image: item.product_image,  // Image from product service
+            product_country: item.product_country,  // Country from product service
+            product_category: item.product_category  // Category from product service
           })),
         },
       },

@@ -22,13 +22,13 @@ async function sendOrder(newOrder, user_email) {
         const invoiceData = {
             user_id,
             timestamp,
-            order_price: parseFloat(order_price),
+            order_price,
             order_id,
             order_items: order_items.map(item => ({
                 order_item_id: item.order_item_id,
                 product_id: parseInt(item.product_id.replace(/\D/g, '')),  // Strip non-numeric characters if needed
                 amount: item.quantity,
-                product_price: parseFloat(item.product_price),  // Ensure it's a number
+                product_price: item.product_price, 
                 product_name: item.product_name,
             })),
         };

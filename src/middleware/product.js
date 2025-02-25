@@ -35,7 +35,7 @@ const getProductData = async (req, res, next) => {
                 }
 
                 const product_price = parseFloat(data.product.price); // Ensure price is a number
-                const total_price = product_price * item.quantity;
+                const total_price = parseFloat(product_price * item.quantity); // Ensure total_price is a number
 
                 return {
                     ...item,

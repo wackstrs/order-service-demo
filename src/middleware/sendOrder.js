@@ -1,49 +1,50 @@
 const INVOICING_SERVICE_URL = `${process.env.INVOICING_SERVICE_URL}/orders`;
 const EMAIL_SERVICE_URL = `${process.env.EMAIL_SERVICE_URL}/order`;
 
+// invoicingAPI POST med information om user_id och dens beställning
+
+// Skicka ordern till fakturering / invoicing
+// Information om beställningen kommer från getCartData funktion
+// dens return kan användas i /orders POST i orderRoutes för att köra sendOrder
 async function sendOrder(newOrder, user_email) {
     const { user_id, order_price, order_id, order_items, timestamp } = newOrder;
 
     try {
-        // --- INVOICING PAYLOAD ---
-        const invoicingPayload = {
+        // --- SKICKA INVOICING DATA ---
+        const invoiceData = { // Del av denna data skapas i vår POST /orders
             user_id,
             timestamp,
             order_price,
             order_id,
             order_items: order_items.map(item => ({
                 order_item_id: item.order_item_id,
-                order_id,
-                product_id: Number(item.product_id),
+                product_id: Number(item.product_id), // BORDE VARA STRING! Men invoicing APIn kräver atm en INT
                 amount: item.quantity,
                 product_price: item.product_price,
                 product_name: item.product_name,
             })),
         };
 
-        console.log("Sending payload to INVOICING service:", JSON.stringify(invoicingPayload, null, 2));
-
+        // skicka till invoicing
         const resInvoice = await fetch(INVOICING_SERVICE_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(invoicingPayload),
+            body: JSON.stringify(invoiceData),
         });
 
-        let invoiceStatus = resInvoice.ok ? "success" : "failed";
-        let invoiceMessage = resInvoice.ok
-            ? "Order data sent to invoicing successfully."
-            : `Failed to send order data to invoicing. Status: ${resInvoice.status}`;
+        let invoiceStatus = "failed";
+        let invoiceMessage = "Failed to send order data to invoicing.";
 
-        if (!resInvoice.ok) {
-            const invoiceErrorData = await resInvoice.text(); // More robust for error handling
-            console.error('INVOICING service response:', invoiceErrorData);
-            invoiceMessage += ` | Response: ${invoiceErrorData}`;
+        if (resInvoice.ok) {
+            // Updaterar variablerna om invoice är successfull
+            invoiceStatus = "success";
+            invoiceMessage = "Order data sent to invoicing successfully.";
         }
 
-        // --- EMAIL PAYLOAD ---
-        const emailPayload = {
+        // --- SKICKA EMAIL DATA  ---
+        const emailData = {
             to: user_email,
-            subject: "Tilausvahvistus",
+            subject: "Beställningsbekräftelse",
             body: [
                 {
                     orderId: order_id,
@@ -63,39 +64,37 @@ async function sendOrder(newOrder, user_email) {
             ],
         };
 
-        console.log("Sending payload to EMAIL service:", JSON.stringify(emailPayload, null, 2));
-
         const resEmail = await fetch(EMAIL_SERVICE_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(emailPayload),
+            body: JSON.stringify(emailData),
         });
 
-        let emailStatus = resEmail.ok ? "success" : "failed";
-        let emailMessage = resEmail.ok
-            ? "Order confirmation email sent successfully."
-            : `Failed to send order confirmation email. Status: ${resEmail.status}`;
+        let emailStatus = "failed";
+        let emailMessage = "Failed to send order data to email.";
 
-        if (!resEmail.ok) {
-            const emailErrorData = await resEmail.text(); // More robust for error handling
-            console.error('EMAIL service response:', emailErrorData);
-            emailMessage += ` | Response: ${emailErrorData}`;
+        if (resEmail.ok) {
+            // Updaterar variablerna om email är successfull
+            emailStatus = "success";
+            emailMessage = "Order sent to email successfully.";
         }
 
-        // --- RETURN STATUS ---
+
+        // Returnerar responsen från både email och invoicing
         return {
             invoiceStatus,
             invoiceMessage,
             emailStatus,
             emailMessage,
         };
+
     } catch (error) {
         console.error('Error sending order data:', error);
         return {
             invoiceStatus: "failed",
             invoiceMessage: error.message,
             emailStatus: "failed",
-            emailMessage: "Error occurred while sending the email data.",
+            emailMessage: "Error occurred while sending the email data."
         };
     }
 }

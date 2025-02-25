@@ -4,7 +4,7 @@ const prisma = require("../config/prisma");
 
 // Importera middlewares
 const getCartData = require('../middleware/cart.js');
-const fetchProductData = require('../middleware/product.js');
+const getProductData = require('../middleware/product.js');
 const checkInventory = require('../middleware/inventory.js');
 const sendOrder = require("../middleware/sendOrder.js");
 
@@ -252,7 +252,7 @@ router.get("/orders", async (req, res) => {
  *                   example: "An unexpected error occurred while creating the order"
  */
 
-router.post("/orders", getCartData, fetchProductData, checkInventory, async (req, res) => {
+router.post("/orders", getCartData, getProductData, checkInventory, async (req, res) => {
   const user_id = parseInt(req.user.sub, 10);
   const cartData = req.cartData;
   const user_email = req.body.email;
@@ -264,7 +264,7 @@ router.post("/orders", getCartData, fetchProductData, checkInventory, async (req
   try {
     const order_price = cartData.cart.reduce((sum, item) => sum + item.total_price, 0);
 
-    // Create the order in the database
+    // Skapa order i databasen
     const newOrder = await prisma.orders.create({
       data: {
         user_id,

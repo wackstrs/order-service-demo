@@ -1,41 +1,48 @@
 const PRODUCT_SERVICE_URL = process.env.PRODUCT_SERVICE_URL;
-const fetchProductData = async (req, res, next) => {
+
+const getProductData = async (req, res, next) => {
     const cartData = req.cartData;
 
     try {
-        // Fetch product details for each item in the cart
-        const productDataPromises = cartData.cart.map(item => 
-            fetch(`${PRODUCT_SERVICE_URL}/product/${item.product_id}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Attach product data to the cart item
-                    item.product_description = data.product?.description || 'No description available';  // Fallback for description
-                    item.product_image = data.product?.image || '/default-image.jpg';  // Fallback for image
-                    item.product_country = data.product?.country || 'Unknown';  // Fallback for country
-                    item.product_category = data.product?.category || 'Uncategorized';  // Fallback for category
-                })
-                .catch(err => {
-                    console.error(`Failed to fetch product data for ${item.product_id}`, err);
-                    // Use fallback data if the fetch fails
-                    item.product_description = 'No description available';
-                    item.product_image = '/default-image.jpg';  // Fallback image
-                    item.product_country = 'Unknown';
-                    item.product_category = 'Uncategorized';
-                })
-        );
+        // hämta produktinformation
+        const getProductDetails = async (item) => {
+            try {
+                const response = await fetch(`${PRODUCT_SERVICE_URL}/product/${item.product_id}`);
+                const data = await response.json();
 
-        // Wait for all product data fetches to complete
-        await Promise.all(productDataPromises);
-        
-        // Continue to the next middleware
+                // lägg till produktinformation till varje item (produkt), använd default-värden om information saknas
+                return {
+                    ...item,
+                    product_description: data.product?.description || 'Ingen beskrivning tillgänglig',
+                    product_image: data.product?.image || '/default-image.jpg',
+                    product_country: data.product?.country || 'Okänt land',
+                    product_category: data.product?.category || 'Okategoriserad'
+                };
+            } catch (err) {
+                console.error(`Failed to fetch product data for ${item.product_id}`, err);
+                // använd default-värden om det inte går att hämta produktinfon
+                return {
+                    ...item,
+                    product_description: 'Ingen beskrivning tillgänglig',
+                    product_image: '/default-image.jpg',
+                    product_country: 'Okänt land',
+                    product_category: 'Okategoriserad'
+                };
+            }
+        };
+
+        // Hämta och uppdatera produktdata för alla produkter
+        const updatedCartData = await Promise.all(cartData.cart.map(getProductDetails));
+
+        // Uppdatera cartData med produktinformation
+        req.cartData.cart = updatedCartData;
+
+        // fortsätt till nästa middleware
         next();
-
     } catch (error) {
         console.error("Error in fetching product data:", error);
-        // Continue the process even if fetching product data fails
-        next();
+        next(); // fortsätt till nästa middleware fast det inte gick att hämta produktdata
     }
 };
 
-// Export middleware for use in routes
-module.exports = fetchProductData;
+module.exports = getProductData;

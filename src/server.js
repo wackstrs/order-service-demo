@@ -1,9 +1,13 @@
 const express = require("express");
+const cors = require("cors");
 const setupSwagger = require('./config/swagger');
 const prisma = require("./config/prisma");
 require("dotenv").config();
 
 const app = express();
+app.use(cors());
+
+
 setupSwagger(app);
 const PORT = process.env.PORT || 8080;
 app.use(express.json());

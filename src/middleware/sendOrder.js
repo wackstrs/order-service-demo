@@ -10,7 +10,7 @@ async function sendOrder(newOrder, user_email) {
     const { user_id, order_price, order_id, order_items, timestamp } = newOrder;
 
     try {
-        // --- SKICKA INVOICING DATA ---
+        // --- SKICKA INVOICING DATA  ---
         const invoiceData = { // Del av denna data skapas i vår POST /orders
             user_id,
             timestamp,

@@ -262,13 +262,14 @@ router.post("/orders", getCartData, getProductData, checkInventory, async (req, 
   }
 
   try {
+    // Calculate the order price based on total price of items in the cart
     const order_price = cartData.cart.reduce((sum, item) => sum + item.total_price, 0);
 
     // Skapa order i databasen
     const newOrder = await prisma.orders.create({
       data: {
         user_id,
-        order_price,
+        order_price,  // Use the calculated order price here
         order_items: {
           create: cartData.cart.map(item => ({
             product_id: String(item.product_id),  // Store product ID

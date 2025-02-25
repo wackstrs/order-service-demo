@@ -4,13 +4,25 @@ const getProductData = async (req, res, next) => {
     const cartData = req.cartData;
 
     try {
-        // hämta produktinformation
+        // Function to get product details
         const getProductDetails = async (item) => {
             try {
+                // Fetch product data from the service
                 const response = await fetch(`${PRODUCT_SERVICE_URL}/product/${item.product_id}`);
+
+                // Check if the response is ok (status code 200-299)
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch, status: ${response.status}`);
+                }
+
                 const data = await response.json();
 
-                // lägg till produktinformation till varje item (produkt), använd default-värden om information saknas
+                // Check if product data exists in the response
+                if (!data || !data.product) {
+                    throw new Error('No product data found');
+                }
+
+                // Attach product details to each item
                 return {
                     ...item,
                     product_description: data.product?.description || 'Ingen beskrivning tillgänglig',
@@ -18,9 +30,10 @@ const getProductData = async (req, res, next) => {
                     product_country: data.product?.country || 'Okänt land',
                     product_category: data.product?.category || 'Okategoriserad'
                 };
+
             } catch (err) {
-                console.error(`Failed to fetch product data for ${item.product_id}`, err);
-                // använd default-värden om det inte går att hämta produktinfon
+                console.error(`Failed to fetch product data for ${item.product_id}:`, err.message);
+                // Return item with default values if there's an error
                 return {
                     ...item,
                     product_description: 'Ingen beskrivning tillgänglig',
@@ -30,6 +43,7 @@ const getProductData = async (req, res, next) => {
                 };
             }
         };
+
 
         // Hämta och uppdatera produktdata för alla produkter
         const updatedCartData = await Promise.all(cartData.cart.map(getProductDetails));

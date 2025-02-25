@@ -253,9 +253,9 @@ router.get("/orders", async (req, res) => {
  */
 
 router.post("/orders", getCartData, getProductData, checkInventory, async (req, res) => {
-  const user_id = parseInt(req.user.sub, 10);
-  const cartData = req.cartData;
-  const user_email = req.body.email;
+  const user_id = parseInt(req.user.sub, 10); // Hämtar user_id från req (req.user.sub är en string men sparas som int i vår prisma)
+  const cartData = req.cartData; // Hämtar cartData från middleware
+  const user_email = req.body.email; // Hämtar email från req.body
 
   if (!user_email) {
     return res.status(400).json({ error: "Email is required in the request body" });
@@ -293,7 +293,7 @@ router.post("/orders", getCartData, getProductData, checkInventory, async (req, 
       include: { order_items: true },
     });
 
-    // Send order confirmation email & invoice
+    // Skickar newOrder till sendOrder och får tillbaks invoiceStatus, invoiceMessage, emailStatus, emailMessage
     const { invoiceStatus, invoiceMessage, emailStatus, emailMessage } = await sendOrder(newOrder, user_email);
 
     res.status(201).json({

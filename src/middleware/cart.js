@@ -13,7 +13,6 @@ const getCartData = async (req, res, next) => {
             }
         });
 
-        
         // Om hämtningen misslyckas
         if (!response.ok) {
             console.error(`Misslyckades med att hämta kundvagn för användare ${user_id}`);

@@ -1,12 +1,18 @@
 const express = require("express");
-const cors = require("cors");
+const cors = require('cors');
 const setupSwagger = require('./config/swagger');
 const prisma = require("./config/prisma");
 require("dotenv").config();
 
 const app = express();
-app.use(cors());
 
+// CORS
+const allowedOrigin = process.env.USERS_FRONTEND_URL;
+app.use(cors({
+    origin: allowedOrigin,  // tillåt anrop från frontend
+    methods: "GET, POST, PUT, DELETE", 
+    allowedHeaders: "Content-Type, Authorization",
+}));
 
 setupSwagger(app);
 const PORT = process.env.PORT || 8080;

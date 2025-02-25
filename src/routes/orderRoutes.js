@@ -261,33 +261,38 @@ router.post("/orders", getCartData, getProductData, checkInventory, async (req, 
     return res.status(400).json({ error: "Email is required in the request body" });
   }
 
+  // Ensure all items have a valid price before proceeding
+  if (cartData.cart.some(item => item.product_price == null)) {
+    return res.status(400).json({ error: "One or more items are missing product prices" });
+  }
+
   try {
-    // Calculate the order price based on total price of items in the cart
+    // Calculate total order price
     const order_price = cartData.cart.reduce((sum, item) => sum + item.total_price, 0);
 
-    // Skapa order i databasen
+    // Create order in database
     const newOrder = await prisma.orders.create({
       data: {
         user_id,
-        order_price,  // Use the calculated order price here
+        order_price,  
         order_items: {
           create: cartData.cart.map(item => ({
-            product_id: String(item.product_id),  // Store product ID
+            product_id: String(item.product_id),
             quantity: item.quantity,
-            product_price: item.product_price || 0,  // Store product price
-            product_name: item.product_name,  // Store product name
-            total_price: item.total_price || 0,
-            product_description: item.product_description,  // Description from product service
-            product_image: item.product_image,  // Image from product service
-            product_country: item.product_country,  // Country from product service
-            product_category: item.product_category  // Category from product service
+            product_price: item.product_price,  // No need for fallback
+            product_name: item.product_name,  
+            total_price: item.total_price,  // No need for fallback
+            product_description: item.product_description,  
+            product_image: item.product_image,  
+            product_country: item.product_country,  
+            product_category: item.product_category  
           })),
         },
       },
       include: { order_items: true },
     });
 
-    // Pass user_email here!
+    // Send order confirmation email & invoice
     const { invoiceStatus, invoiceMessage, emailStatus, emailMessage } = await sendOrder(newOrder, user_email);
 
     res.status(201).json({

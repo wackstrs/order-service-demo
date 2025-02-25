@@ -10,21 +10,25 @@ const getProductData = async (req, res, next) => {
                 // Fetch product data from the service
                 const response = await fetch(`${PRODUCT_SERVICE_URL}/product/${item.product_id}`);
 
-                // Check if the response is ok (status code 200-299)
                 if (!response.ok) {
-                    throw new Error(`Failed to fetch, status: ${response.status}`);
+                    throw new Error(`Failed to fetch product data, status: ${response.status}`);
                 }
 
                 const data = await response.json();
 
-                // Check if product data exists in the response
-                if (!data || !data.product) {
-                    throw new Error('No product data found');
+                if (!data || !data.product || data.product.price == null) {
+                    throw new Error(`Missing product data or price for ${item.product_id}`);
                 }
+
+                // Calculate total price for each item
+                const product_price = data.product.price;
+                const total_price = product_price * item.quantity;
 
                 // Attach product details to each item
                 return {
                     ...item,
+                    product_price,
+                    total_price,
                     product_description: data.product?.description || 'Ingen beskrivning tillgänglig',
                     product_image: data.product?.image || '/default-image.jpg',
                     product_country: data.product?.country || 'Okänt land',
@@ -32,30 +36,23 @@ const getProductData = async (req, res, next) => {
                 };
 
             } catch (err) {
-                console.error(`Failed to fetch product data for ${item.product_id}:`, err.message);
-                // Return item with default values if there's an error
-                return {
-                    ...item,
-                    product_description: 'Ingen beskrivning tillgänglig',
-                    product_image: '/default-image.jpg',
-                    product_country: 'Okänt land',
-                    product_category: 'Okategoriserad'
-                };
+                throw new Error(`Failed to fetch product data for ${item.product_id}: ${err.message}`);
             }
         };
 
+        // Fetch and update product data for all cart items
+        req.cartData.cart = await Promise.all(cartData.cart.map(getProductDetails));
 
-        // Hämta och uppdatera produktdata för alla produkter
-        const updatedCartData = await Promise.all(cartData.cart.map(getProductDetails));
-
-        // Uppdatera cartData med produktinformation
-        req.cartData.cart = updatedCartData;
-
-        // fortsätt till nästa middleware
+        // Proceed to the next middleware
         next();
     } catch (error) {
-        console.error("Error in fetching product data:", error);
-        next(); // fortsätt till nästa middleware fast det inte gick att hämta produktdata
+        console.error("Error fetching product data:", error.message);
+        
+        // Send an error response instead of continuing
+        return res.status(500).json({
+            error: "Product data fetch failed",
+            message: error.message
+        });
     }
 };
 

@@ -274,9 +274,9 @@ router.post("/orders", getCartData, getProductData, checkInventory, async (req, 
           create: cartData.cart.map(item => ({
             product_id: String(item.product_id),  // Store product ID
             quantity: item.quantity,
-            product_price: item.price,  // Store product price
+            product_price: item.product_price || 0,  // Store product price
             product_name: item.product_name,  // Store product name
-            total_price: item.total_price,
+            total_price: item.total_price || 0,
             product_description: item.product_description,  // Description from product service
             product_image: item.product_image,  // Image from product service
             product_country: item.product_country,  // Country from product service

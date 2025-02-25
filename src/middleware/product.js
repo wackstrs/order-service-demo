@@ -2,13 +2,16 @@ const PRODUCT_SERVICE_URL = process.env.PRODUCT_SERVICE_URL;
 
 const getProductData = async (req, res, next) => {
     const cartData = req.cartData;
+    const token = req.token; // Ensure token is used
+    console.log("Using token:", req.token);
+
 
     try {
         // Function to get product details
         const getProductDetails = async (item) => {
             try {
                 // Fetch product data from the service
-                const response = await fetch(`${PRODUCT_SERVICE_URL}/product/${item.product_id}`);
+                const response = await fetch(`${PRODUCT_SERVICE_URL}/products/${item.product_id}`);
 
                 if (!response.ok) {
                     throw new Error(`Failed to fetch product data, status: ${response.status}`);

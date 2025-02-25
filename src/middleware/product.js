@@ -53,3 +53,5 @@ const getProductData = async (req, res, next) => {
         });
     }
 };
+
+module.exports = getProductData;

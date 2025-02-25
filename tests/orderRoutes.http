@@ -39,7 +39,7 @@ token: {{$dotenv ORDER_SERVICE_USER_AUTH_TOKEN}}
 ###
 GET {{$dotenv INVENTORY_SERVICE_URL}}/inventory
 Content-Type: application/json
-
+Authorization: Bearer {{$dotenv ORDER_SERVICE_USER_AUTH_TOKEN}}
 
 // Minska lagersaldo för produkter
 ###
@@ -111,7 +111,7 @@ Authorization: Bearer {{$dotenv PRODUCT_SERVICE_AUTH_TOKEN}}
 
 // Hämta en produkt (sku)
 ###
-GET {{$dotenv PRODUCT_SERVICE_URL}}/products/101-USL
+GET {{$dotenv PRODUCT_SERVICE_URL}}/products/10000-MXL
 Content-Type: application/json
 Authorization: Bearer {{$dotenv PRODUCT_SERVICE_AUTH_TOKEN}}
 

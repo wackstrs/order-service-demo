@@ -1,11 +1,20 @@
 const INVENTORY_SERVICE_URL = `${process.env.INVENTORY_SERVICE_URL}/inventory/decrease`;
 
 const checkInventory = async (req, res, next) => {
-    const cartData = req.cartData; // cartData från föregående middleware
-    const user_email = req.body.email; // Get email from request body
+    const cartData = req.cartData; 
+    const user_email = req.body.email; 
+
+    const token = process.env.ORDER_SERVICE_USER_AUTH_TOKEN || req.token;
 
     if (!user_email) {
         return res.status(400).json({ error: "Email is required in the request body" });
+    }
+
+    if (!token) {
+        return res.status(500).json({
+            error: "Missing authentication token",
+            message: "Inventory service requires an authentication token"
+        });
     }
 
     try {
@@ -17,13 +26,13 @@ const checkInventory = async (req, res, next) => {
             })),
         };
 
-        console.log("🛒 Sending Inventory Request Payload:");
-        console.log(JSON.stringify(inventoryRequest, null, 2));
+        console.log("🛒 Sending Inventory Request Payload:", JSON.stringify(inventoryRequest, null, 2));
 
         const inventoryResponse = await fetch(INVENTORY_SERVICE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token.trim()}` // Include token in headers
             },
             body: JSON.stringify(inventoryRequest),
         });
@@ -32,8 +41,8 @@ const checkInventory = async (req, res, next) => {
             const errorData = await inventoryResponse.json();
             console.error("❌ Inventory Service Error Response:", errorData);
             return res.status(400).json({
-                error: errorData.error || "Uppdatering av lagersaldo misslyckades",
-                message: errorData.message || "Går inte att uppdatera lagersaldo",
+                error: errorData.error || "Failed to update inventory",
+                message: errorData.message || "Could not update stock levels",
             });
         }
 
@@ -41,10 +50,10 @@ const checkInventory = async (req, res, next) => {
         next();
 
     } catch (error) {
-        console.error("🔥 Fel vid kontroll av lager", error);
+        console.error("🔥 Error checking inventory", error);
         return res.status(500).json({
-            error: "Internt serverfel",
-            message: "Misslyckades med att validera eller uppdatera lagersaldo",
+            error: "Internal server error",
+            message: "Failed to validate or update inventory stock",
         });
     }
 };

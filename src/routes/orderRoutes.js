@@ -20,14 +20,7 @@ const sendOrder = require("../middleware/sendOrder.js");
  *     tags:
  *       - Orders
  *     security:
- *       - bearerAuth: []  # Requires JWT authentication
- *     parameters:
- *       - name: Authorization
- *         in: header
- *         description: "Bearer token for authentication (format: 'Bearer <token>')"
- *         required: true
- *         schema:
- *           type: string
+ *       - bearerAuth: []  # Requires JWT authentication (admin only)
  *     responses:
  *       200:
  *         description: Successfully retrieved orders
@@ -66,30 +59,34 @@ const sendOrder = require("../middleware/sendOrder.js");
  *       401:
  *         description: Unauthorized - Missing or invalid token
  *       403:
- *         description: Forbidden - User is not an admin
+ *         description: Forbidden - User is not an admin. Admin role required.
  *       404:
- *         description: No orders found
+ *         description: No orders found - There are no orders in the system.
  *       500:
- *         description: Internal server error while retrieving orders
+ *         description: Internal server error - Error while retrieving orders
  */
 
 
 router.get("/admin/orders", authMiddleware, adminMiddleware, async (req, res) => {
   try {
-      const orders = await prisma.orders.findMany({
-          include: { order_items: true },
-      });
+    // Fetch orders including the order items
+    const orders = await prisma.orders.findMany({
+      include: { order_items: true },
+    });
 
-      if (orders.length === 0) {
-          return res.status(404).json({ error: "No orders found." });
-      }
+    // If no orders are found, return a 404 error
+    if (orders.length === 0) {
+      return res.status(404).json({ error: "No orders found." });
+    }
 
-      res.status(200).json(orders);
+    // Return the orders with a 200 status
+    res.status(200).json(orders);
   } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Failed to retrieve orders.", message: error.message });
+    console.error(error);
+    res.status(500).json({ error: "Failed to retrieve orders.", message: error.message });
   }
 });
+
 
 /**
  * @swagger
@@ -440,25 +437,20 @@ router.post("/orders", getCartData, getProductData, checkInventory, async (req, 
  * /admin/delete/{order_id}:
  *   delete:
  *     summary: Delete an order (Admin access only)
- *     description: Deletes an order by its ID. Only accessible by admin users.
+ *     description: Deletes an order by its ID. Only accessible by admin users. The order is identified by the `order_id` path parameter.
  *     operationId: deleteOrder
  *     tags:
  *       - Orders
  *     security:
- *       - bearerAuth: []  # This specifies that authentication is required
+ *       - bearerAuth: []  # Requires JWT authentication (admin only)
  *     parameters:
  *       - name: order_id
  *         in: path
- *         description: The ID of the order to delete
+ *         description: The ID of the order to delete. This should be a valid integer representing the order's ID.
  *         required: true
  *         schema:
  *           type: integer
- *       - name: Authorization
- *         in: header
- *         description: "Bearer token for authentication (format: 'Bearer <token>')"
- *         required: true
- *         schema:
- *           type: string
+ *           example: 123  # Example ID to be deleted
  *     responses:
  *       200:
  *         description: Successfully deleted order
@@ -470,12 +462,14 @@ router.post("/orders", getCartData, getProductData, checkInventory, async (req, 
  *                 message:
  *                   type: string
  *                   example: "Successfully deleted order with ID: 123"
+ *       400:
+ *         description: Bad Request - Invalid order ID format
  *       401:
  *         description: Unauthorized - Missing or invalid token
  *       403:
  *         description: Forbidden - User is not an admin
  *       404:
- *         description: Order not found
+ *         description: Order not found - The order ID does not exist in the system
  *       500:
  *         description: Internal server error while deleting the order
  */
@@ -485,9 +479,15 @@ router.delete("/admin/delete/:order_id", authMiddleware, adminMiddleware, async 
   const { order_id } = req.params; // Extract order ID from URL
 
   try {
-      // Check if order exists
+      // Ensure the order_id is a valid integer
+      const parsedOrderId = parseInt(order_id);
+      if (isNaN(parsedOrderId)) {
+          return res.status(400).json({ error: "Invalid order ID." });
+      }
+
+      // Check if the order exists
       const order = await prisma.orders.findUnique({
-          where: { order_id: parseInt(order_id) }
+          where: { order_id: parsedOrderId }
       });
 
       if (!order) {
@@ -496,7 +496,7 @@ router.delete("/admin/delete/:order_id", authMiddleware, adminMiddleware, async 
 
       // Delete order
       await prisma.orders.delete({
-          where: { order_id: parseInt(order_id) }
+          where: { order_id: parsedOrderId }
       });
 
       res.status(200).json({ message: `Successfully deleted order with ID: ${order_id}` });
@@ -506,5 +506,6 @@ router.delete("/admin/delete/:order_id", authMiddleware, adminMiddleware, async 
       res.status(500).json({ error: "Failed to delete order", message: error.message });
   }
 });
+
 
 module.exports = router;

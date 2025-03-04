@@ -1,21 +1,10 @@
 const INVENTORY_SERVICE_URL = `${process.env.INVENTORY_SERVICE_URL}/inventory/decrease`;
 
+// Middleware som kontrollerar och reducerar lagersaldo för varje produkt i kundvagnen
 const checkInventory = async (req, res, next) => {
-    const cartData = req.cartData; 
-    const user_email = req.body.email; 
-
-    const token = process.env.ORDER_SERVICE_USER_AUTH_TOKEN || req.token;
-
-    if (!user_email) {
-        return res.status(400).json({ error: "Email is required in the request body" });
-    }
-
-    if (!token) {
-        return res.status(500).json({
-            error: "Missing authentication token",
-            message: "Inventory service requires an authentication token"
-        });
-    }
+    const cartData = req.cartData; // cartData från föregående middleware
+    const user_email = req.user.email; // email från req
+    const token = req.token; // Token från req
 
     try {
         const inventoryRequest = {
@@ -26,31 +15,58 @@ const checkInventory = async (req, res, next) => {
             })),
         };
 
-        console.log("🛒 Sending Inventory Request Payload:", JSON.stringify(inventoryRequest, null, 2));
+        console.log("Sending to inventory-service...:", JSON.stringify(inventoryRequest, null, 2));
 
+        // Skickar en POST request till inventory service för att minska lagersaldot
         const inventoryResponse = await fetch(INVENTORY_SERVICE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token.trim()}` // Include token in headers
+                'Authorization': `Bearer ${token.trim()}`
             },
             body: JSON.stringify(inventoryRequest),
         });
 
+        // Om responsen från inventory service inte är OK, hantera fel baserat på statuskod
         if (!inventoryResponse.ok) {
-            const errorData = await inventoryResponse.json();
-            console.error("❌ Inventory Service Error Response:", errorData);
-            return res.status(400).json({
-                error: errorData.error || "Failed to update inventory",
-                message: errorData.message || "Could not update stock levels",
+
+            // Parse JSON response för att få error details
+            let errorData = {};
+            try {
+                errorData = await inventoryResponse.json();
+            } catch (err) { // Om parsing misslyckas (invalid JSON), logga errorn
+                console.error("Failed to parse inventory service response:", err);
+                errorData = { 
+                    error: "Invalid JSON response",
+                    detail: "The response from the inventory service could not be parsed as JSON." 
+                };
+            }
+
+            if (inventoryResponse.status === 404) {
+                return res.status(404).json({
+                    error: "Produkten hittades inte",
+                    message: errorData.detail || "En eller flera produkter saknas i lagret",
+                });
+            }
+
+            if (inventoryResponse.status === 400) {
+                return res.status(400).json({
+                    error: "Otillräckligt lagersaldo",
+                    message: errorData.detail || "Det finns inte tillräckligt med produkter i lager",
+                })
+            }
+
+            // Fallback för andra fel
+            return res.status(inventoryResponse.status).json({
+                error: errorData.error || "Lageruppdatering misslyckades",
+                message: errorData.detail || "Ett okänt fel inträffade vid uppdatering av lagersaldo",
             });
         }
 
-        console.log("✅ Inventory Check Successful");
-        next();
-
+        console.log("Inventory check successful");
+        next(); // Om allt ok, fortsätt till nästa middleware
     } catch (error) {
-        console.error("🔥 Error checking inventory", error);
+        console.error("Error checking inventory", error);
         return res.status(500).json({
             error: "Internal server error",
             message: "Failed to validate or update inventory stock",

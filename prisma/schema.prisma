@@ -12,7 +12,8 @@ model orders {
   user_id     Int
   timestamp   DateTime  @default(now()) 
   order_price Decimal   @db.Decimal(10, 2)
-  order_items order_items[] 
+  order_items order_items[]
+  shipping_address String
 }
 
 model order_items {

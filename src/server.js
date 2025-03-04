@@ -7,11 +7,15 @@ require("dotenv").config();
 const app = express();
 
 // CORS
-const allowedOrigin = process.env.USERS_FRONTEND_URL;
+const allowedOrigins = [
+    process.env.USERS_FRONTEND_URL, 
+    process.env.STORE_FRONTEND_URL  
+];
 app.use(cors({
-    origin: allowedOrigin,  // tillåt anrop från frontend
+    origin: allowedOrigins,  // tillåt anrop från frontend
     methods: "GET, POST, PUT, DELETE", 
-    allowedHeaders: "Content-Type, Authorization",
+    allowedHeaders: ["Content-Type", "Authorization", "token"], 
+    credentials: true,
 }));
 
 setupSwagger(app);

@@ -1,138 +1,105 @@
-const INVOICING_SERVICE_URL = `${process.env.INVOICING_SERVICE_URL}/orders`;
-const EMAIL_SERVICE_URL = `${process.env.EMAIL_SERVICE_URL}/order`;
+const INVOICING_SERVICE_URL = process.env.INVOICING_SERVICE_URL;
+const EMAIL_SERVICE_URL = process.env.EMAIL_SERVICE_URL;
 
-// Function to send the order data to invoicing and email services
-async function sendOrder(newOrder, user_email) {
-    const { user_id, order_price, order_id, order_items, timestamp } = newOrder;
+// invoicingAPI POST med information om user_id och dens beställning
 
-    try {
-        // --- Validate Invoicing Payload ---
-        if (!user_id || !order_id || !order_items || order_items.length === 0) {
-            throw new Error("Invalid order data. Missing required fields: user_id, order_id, or order_items.");
-        }
+// Skicka ordern till fakturering / invoicing
+// Information om beställningen kommer från getCartData funktion
+// dens return kan användas i /orders POST i orderRoutes för att köra sendOrder
+async function sendOrder(newOrder, user_email, token) {
+    const { user_id, order_price, order_id, order_items, timestamp, shipping_address } = newOrder;
 
-        // Validate each item in the order
-        order_items.forEach(item => {
-            if (!item.order_item_id || !item.product_id || !item.product_name || !item.quantity || !item.product_price) {
-                throw new Error(`Invalid item data. Missing required fields in item with product_id: ${item.product_id}`);
-            }
-        });
+    // Invoice payload
+    const invoiceData = {
+        user_id,
+        timestamp,
+        order_price,
+        order_id,
+        shipping_address,
+        order_items: order_items.map(item => ({
+            order_item_id: item.order_item_id,
+            product_id: item.product_id,
+            amount: item.quantity,
+            product_price: item.product_price,
+            product_name: item.product_name,
+        })),
+    }
 
-        // Prepare the invoicing data
-        const invoiceData = {
-            user_id,
-            timestamp,
-            order_price,
-            order_id,
-            order_items: order_items.map(item => ({
-                order_item_id: item.order_item_id,
-                product_id: parseInt(item.product_id.replace(/\D/g, '')),  // Strip non-numeric characters if needed
-                amount: item.quantity,
-                product_price: item.product_price, 
-                product_name: item.product_name,
-            })),
-        };
+    // Email payload
+    const emailData = {
+        to: user_email,
+        subject: `Beercraft Order Confirmation #${order_id}`,
+        body: [
+            {
+                orderId: order_id,
+                userId: user_id,
+                timestamp,
+                orderPrice: order_price,
+                shipping_address,
+                orderItems: order_items.map(item => ({
+                    product_image: item.product_image,
+                    product_name: item.product_name,
+                    product_description: item.product_description,
+                    product_country: item.product_country,
+                    product_category: item.product_category,
+                    order_item_id: item.order_item_id,
+                    order_id,
+                    product_id: item.product_id,
+                    quantity: item.quantity,
+                    product_price: item.product_price,
+                    total_price: item.total_price,
+                })),
+            },
+        ],
+    }
 
-        // Log the invoicing payload
-        console.log("Invoicing Payload:", JSON.stringify(invoiceData, null, 2));
+    console.log("Invoicing Data:", JSON.stringify(invoiceData, null, 2));
+    console.log("Email Data:", JSON.stringify(emailData, null, 2));
 
-        // Send the order data to invoicing service
-        const resInvoice = await fetch(INVOICING_SERVICE_URL, {
+    // Kör båda requests parallellt
+    const [invoiceResult, emailResult] = await Promise.allSettled([
+        fetch(INVOICING_SERVICE_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": `Bearer ${token.trim()}`
+            },
             body: JSON.stringify(invoiceData),
-        });
+        }).then(res => res.ok ? res.json() : Promise.reject(`Invoice API status: ${res.status} - ${res.statusText}`)),
 
-        let invoiceStatus = "failed";
-        let invoiceMessage = "Failed to send order data to invoicing.";
-
-        if (resInvoice.ok) {
-            const invoiceResponse = await resInvoice.json();
-            // Check if the response contains specific error details if not OK
-            if (invoiceResponse.error) {
-                invoiceMessage = invoiceResponse.error.message || invoiceMessage;
-            } else {
-                invoiceStatus = "success";
-                invoiceMessage = "Order data sent to invoicing successfully.";
-            }
-        } else {
-            invoiceMessage = `Invoice API returned status: ${resInvoice.status}`;
-        }
-
-        // Log the status of invoicing
-        console.log("Invoicing Response Status:", invoiceStatus);
-        console.log("Invoicing Response Message:", invoiceMessage);
-
-        // --- Prepare the email data ---
-        const emailData = {
-            to: user_email,
-            subject: "Beställningsbekräftelse",
-            body: [
-                {
-                    orderId: order_id,
-                    userId: user_id,
-                    timestamp,
-                    orderPrice: order_price,
-                    orderItems: order_items.map(item => ({
-                        order_item_id: item.order_item_id,
-                        order_id,
-                        product_id: item.product_id,
-                        product_name: item.product_name,
-                        amount: item.quantity,
-                        product_price: item.product_price,
-                        total_price: item.total_price,
-                    })),
-                },
-            ],
-        };
-
-        // Log the email payload
-        console.log("Email Payload:", JSON.stringify(emailData, null, 2));
-
-        // Send the order confirmation email
-        const resEmail = await fetch(EMAIL_SERVICE_URL, {
+        fetch(EMAIL_SERVICE_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(emailData),
-        });
+        }).then(res => res.ok ? res.json() : Promise.reject(`Email API status: ${res.status} - ${res.statusText}`)),
+    ])
 
-        let emailStatus = "failed";
-        let emailMessage = "Failed to send order data to email.";
+    // Checkar om promisen returnerar 'fulfilled'
+    const invoiceStatus = invoiceResult.status === "fulfilled" ? "success" : "failed";
 
-        if (resEmail.ok) {
-            const emailResponse = await resEmail.json();
-            // Check if the response contains specific error details if not OK
-            if (emailResponse.error) {
-                emailMessage = emailResponse.error.message || emailMessage;
-            } else {
-                emailStatus = "success";
-                emailMessage = "Order sent to email successfully.";
-            }
-        } else {
-            emailMessage = `Email API returned status: ${resEmail.status}`;
-        }
+    // Ternary conditional operator -> const A = B === "fulfilled" ? (C ? D : F) : E;
+    // Checkar om invoiceResult.status === "fulfilled" (B === "fulfilled")
+    // TRUE -> Checkar om invoiceResult.value är error. (C)
+    //      Yes -> använd invoiceResult.value.error.message (D)
+    //      No  -> använd "Order data sent to invoicing-service successfully." (F)
+    // FALSE -> använd invoiceResult.reason (E)
+    const invoiceMessage = invoiceResult.status === "fulfilled"
+        ? (invoiceResult.value.error ? invoiceResult.value.error.message : "Order data sent to invoicing-service successfully.")
+        : invoiceResult.reason;
 
-        // Log the status of email
-        console.log("Email Response Status:", emailStatus);
-        console.log("Email Response Message:", emailMessage);
+    // Gör samma med emailStatus
+    const emailStatus = emailResult.status === "fulfilled" ? "success" : "failed";
+    const emailMessage = emailResult.status === "fulfilled"
+        ? (emailResult.value.error ? emailResult.value.error.message : "Order data sent to email-service successfully.")
+        : emailResult.reason;
 
-        // Return the status of both the invoicing and email services
-        return {
-            invoiceStatus,
-            invoiceMessage,
-            emailStatus,
-            emailMessage,
-        };
-
-    } catch (error) {
-        console.error('Error sending order data:', error);
-        return {
-            invoiceStatus: "failed",
-            invoiceMessage: error.message,
-            emailStatus: "failed",
-            emailMessage: "Error occurred while sending the email data."
-        };
-    }
+    // Returnerar status för email och invoice
+    return {
+        invoiceStatus,
+        invoiceMessage,
+        emailStatus,
+        emailMessage,
+    };
 }
 
 module.exports = sendOrder;

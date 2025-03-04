@@ -1,6 +1,13 @@
 const CART_SERVICE_URL = process.env.CART_SERVICE_URL;
 
 const getCartData = async (req, res, next) => {
+    const { shipping_address } = req.body; // hämtar shipping_address från req
+
+    // kollar att shipping_address inte är tom
+    if (!shipping_address || shipping_address.trim() === '') {
+        return res.status(400).json({ message: 'Shipping address is required' });
+
+    }
     const user_id = req.user.sub; // user_id kommer från JWTn
     const token = req.token; // Får token från middleware
 
@@ -36,6 +43,9 @@ const getCartData = async (req, res, next) => {
 
         // Lägg till cartData i request objektet för att användas i nästa middleware
         req.cartData = cartData;
+
+        // sparar shipping address i req objektet
+        req.shipping_address = shipping_address;
 
         // Fortsätt till nästa middleware (checkInventory)
         next();

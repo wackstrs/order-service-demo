@@ -28,30 +28,100 @@ const sendOrder = require("../middleware/sendOrder.js");
  *         description: Successfully retrieved orders.
  *         content:
  *           application/json:
- *             example:
- *               - order_id: 1
- *                 user_id: 101
- *                 order_price: 299.99
- *                 order_items:
- *                   - product_id: 1
- *                     product_name: "Hantverksöl IPA"
- *                     quantity: 2
- *                     product_price: 149.99
- *                     total_price: 299.98
- *               - order_id: 2
- *                 user_id: 102
- *                 order_price: 199.99
- *                 order_items:
- *                   - product_id: 2
- *                     product_name: "Lageröl"
- *                     quantity: 1
- *                     product_price: 199.99
- *                     total_price: 199.99
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   order_id:
+ *                     type: integer
+ *                     example: 20
+ *                   user_id:
+ *                     type: integer
+ *                     example: 101
+ *                   timestamp:
+ *                     type: string
+ *                     format: date-time
+ *                     example: "2025-03-03T17:07:12.701Z"
+ *                   order_price:
+ *                     type: string
+ *                     example: "11"
+ *                   shipping_address:
+ *                     type: string
+ *                     example: "123 Main St, City, Country, ZIP"
+ *                   order_items:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         order_item_id:
+ *                           type: integer
+ *                           example: 48
+ *                         order_id:
+ *                           type: integer
+ *                           example: 20
+ *                         product_id:
+ *                           type: string
+ *                           example: "10000-FIL"
+ *                         product_name:
+ *                           type: string
+ *                           example: "Karhu 4,6%"
+ *                         quantity:
+ *                           type: integer
+ *                           example: 1
+ *                         product_price:
+ *                           type: string
+ *                           example: "11"
+ *                         total_price:
+ *                           type: string
+ *                           example: "11"
+ *                         product_description:
+ *                           type: string
+ *                           example: "Gulbrun, medelfyllig, medelstor humlebeska, lätt maltighet, fruktig"
+ *                         product_image:
+ *                           type: string
+ *                           example: "/uploads/1740587181163-karhu-46-burk.jpg"
+ *                         product_country:
+ *                           type: string
+ *                           example: "Finland"
+ *                         product_category:
+ *                           type: string
+ *                           example: "Lager"
+ *       403:
+ *         description: Access denied. Admins only.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Access denied. Admins only."
  *       404:
  *         description: No orders found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No orders found."
  *       500:
  *         description: Server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to retrieve orders."
+ *                 message:
+ *                   type: string
+ *                   example: "An unexpected error occurred while retrieving orders."
  */
+
 router.get("/admin/orders", async (req, res) => {
   const role = req.user.role;
 
@@ -67,7 +137,7 @@ router.get("/admin/orders", async (req, res) => {
     });
 
     if (orders.length === 0) {
-      return res.status(404).json({ error: "Inga ordrar hittades" });
+      return res.status(404).json({ error: "No orders found." });
     }
 
     res.status(200).json(orders);
@@ -75,7 +145,7 @@ router.get("/admin/orders", async (req, res) => {
     console.error(error);
     res
       .status(500)
-      .json({ error: "Hämtningen misslyckades", message: error.message });
+      .json({ error: "Failed to retrieve orders.", message: error.message });
   }
 });
 
@@ -84,40 +154,109 @@ router.get("/admin/orders", async (req, res) => {
  * /orders:
  *   get:
  *     summary: Get orders for a specific user
- *     description: Fetches all orders related to a given user ID.
+ *     description: Fetches all orders related to a given user ID, which is extracted from the JWT token.
  *     operationId: getOrdersForUser
  *     tags: [Orders]
  *     parameters:
  *       - name: token
  *         in: header
  *         required: true
- *         description: The JWT token used for authentication.
- *         type: string
+ *         description: The JWT token used for authentication. The user_id will be extracted from this token.
+ *         schema:
+ *           type: string
+ *           description: The JWT token for authentication.
  *     responses:
  *       200:
  *         description: Successfully retrieved orders.
  *         content:
  *           application/json:
- *             example:
- *               - order_id: 1
- *                 user_id: 101
- *                 order_price: 499.98
- *                 order_items:
- *                   - product_id: 1
- *                     product_name: "Hantverksöl IPA"
- *                     quantity: 2
- *                     product_price: 149.99
- *                     total_price: 299.98
- *                   - product_id: 2
- *                     product_name: "Lageröl"
- *                     quantity: 1
- *                     product_price: 199.99
- *                     total_price: 199.99
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   order_id:
+ *                     type: integer
+ *                     example: 20
+ *                   user_id:
+ *                     type: integer
+ *                     example: 101
+ *                   timestamp:
+ *                     type: string
+ *                     format: date-time
+ *                     example: "2025-03-03T17:07:12.701Z"
+ *                   order_price:
+ *                     type: string
+ *                     example: "11"
+ *                   shipping_address:
+ *                     type: string
+ *                     example: "123 Main St, City, Country, ZIP"
+ *                   order_items:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         order_item_id:
+ *                           type: integer
+ *                           example: 48
+ *                         order_id:
+ *                           type: integer
+ *                           example: 20
+ *                         product_id:
+ *                           type: string
+ *                           example: "10000-FIL"
+ *                         product_name:
+ *                           type: string
+ *                           example: "Karhu 4,6%"
+ *                         quantity:
+ *                           type: integer
+ *                           example: 1
+ *                         product_price:
+ *                           type: string
+ *                           example: "11"
+ *                         total_price:
+ *                           type: string
+ *                           example: "11"
+ *                         product_description:
+ *                           type: string
+ *                           example: "Gulbrun, medelfyllig, medelstor humlebeska, lätt maltighet, fruktig"
+ *                         product_image:
+ *                           type: string
+ *                           example: "/uploads/1740587181163-karhu-46-burk.jpg"
+ *                         product_country:
+ *                           type: string
+ *                           example: "Finland"
+ *                         product_category:
+ *                           type: string
+ *                           example: "Lager"
  *       404:
  *         description: No orders found for the given user.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No orders found for the user."
+ *                 message:
+ *                   type: string
+ *                   example: "The user has no orders."
  *       500:
  *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to retrieve orders."
+ *                 message:
+ *                   type: string
+ *                   example: "An unexpected error occurred while retrieving orders."
  */
+
 router.get("/orders", async (req, res) => {
   const user_id = req.user.sub; // Hämtar user_id från JWTn
 
@@ -150,7 +289,7 @@ router.get("/orders", async (req, res) => {
  * /orders:
  *   post:
  *     summary: Create a new order
- *     description: Fetches cart data, checks inventory, creates an order, and attempts to send order data to the invoicing and email services.
+ *     description: Fetches cart data, gets product data, checks inventory, creates an order, and attempts to send order data to the invoicing and email services.
  *     operationId: createOrder
  *     tags:
  *       - Orders
@@ -160,6 +299,18 @@ router.get("/orders", async (req, res) => {
  *         description: The JWT token used for authentication. Required for order creation.
  *         required: true
  *         type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               shipping_address:
+ *                 type: string
+ *                 example: "123 Main St, City, Country"
+ *             required:
+ *               - shipping_address
  *     responses:
  *       201:
  *         description: Order created successfully, but invoicing and/or email services may have failed.
@@ -180,14 +331,17 @@ router.get("/orders", async (req, res) => {
  *                     user_id:
  *                       type: integer
  *                       example: 3
- *                     order_price:
- *                       type: number
- *                       format: float
- *                       example: 199.99
  *                     timestamp:
  *                       type: string
  *                       format: date-time
  *                       example: "2025-02-10T14:30:00Z"
+ *                     order_price:
+ *                       type: number
+ *                       format: float
+ *                       example: 12.58
+ *                     shipping_address:
+ *                       type: string
+ *                       example: "Jan-Magnus Janssons plats 1, Helsingfors, Finland, 00560"
  *                     order_items:
  *                       type: array
  *                       items:
@@ -205,11 +359,11 @@ router.get("/orders", async (req, res) => {
  *                           product_price:
  *                             type: number
  *                             format: float
- *                             example: 49.99
+ *                             example: 6.29
  *                           total_price:
  *                             type: number
  *                             format: float
- *                             example: 99.98
+ *                             example: 12.58
  *                 invoiceStatus:
  *                   type: string
  *                   enum: [success, failed]
@@ -225,7 +379,7 @@ router.get("/orders", async (req, res) => {
  *                   type: string
  *                   example: "Order sent to email successfully."
  *       400:
- *         description: Missing user_id or token
+ *         description: Bad Request (Missing shipping address or insufficient stock)
  *         content:
  *           application/json:
  *             schema:
@@ -233,10 +387,41 @@ router.get("/orders", async (req, res) => {
  *               properties:
  *                 error:
  *                   type: string
- *                   example: "Missing user_id or token"
+ *                   example: "Shipping address is required"
  *                 message:
  *                   type: string
- *                   example: "Both user_id and token are required."
+ *                   example: "Shipping address is required"
+ *               oneOf:
+ *                 - properties:
+ *                     error:
+ *                       type: string
+ *                       example: "Insufficient stock"
+ *                     message:
+ *                       type: string
+ *                       example: "There is not enough stock for the requested product."
+ *       401:
+ *         description: Missing token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Access denied. No token provided."
+ *       404:
+ *         description: Product not found in stock
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Product not found."
+ *                 message:
+ *                   type: string
+ *                   example: "One or more products not found in stock."
  *       500:
  *         description: Internal server error
  *         content:
@@ -255,33 +440,27 @@ router.get("/orders", async (req, res) => {
 router.post("/orders", getCartData, getProductData, checkInventory, async (req, res) => {
   const user_id = parseInt(req.user.sub, 10); // Hämtar user_id från req (req.user.sub är en string men sparas som int i vår prisma)
   const cartData = req.cartData; // Hämtar cartData från middleware
-  const user_email = req.body.email; // Hämtar email från req.body
-
-  if (!user_email) {
-    return res.status(400).json({ error: "Email is required in the request body" });
-  }
-
-  // Ensure all items have a valid price before proceeding
-  if (cartData.cart.some(item => item.product_price == null)) {
-    return res.status(400).json({ error: "One or more items are missing product prices" });
-  }
+  const user_email = req.user.email; // Hämtar email från req
+  const token = req.token; // Hämtar token från req
+  const shipping_address = req.shipping_address; // hämtar shipping_address från req (i cart.js)
 
   try {
-    // Calculate total order price
+    // Beräkna totalpriset för ordern
     const order_price = cartData.cart.reduce((sum, item) => sum + parseFloat(item.total_price), 0);
-    const formattedOrderPrice = order_price.toFixed(2);  // Format to 2 decimals
+    const formattedOrderPrice = parseFloat(order_price.toFixed(2));
 
-    // Create order in database
+    // --- SKAPA ORDER I DATABASEN ---
     const newOrder = await prisma.orders.create({
       data: {
         user_id,
-        order_price: parseFloat(formattedOrderPrice),
+        order_price: formattedOrderPrice,
+        shipping_address,
         order_items: {
           create: cartData.cart.map(item => ({
             product_id: item.product_id,
             quantity: item.quantity,
-            product_price: parseFloat(item.product_price).toFixed(2),
-            total_price: parseFloat(item.total_price).toFixed(2), 
+            product_price: parseFloat(item.product_price.toFixed(2)),
+            total_price: parseFloat(item.total_price.toFixed(2)),
             product_name: item.product_name,
             product_description: item.product_description,
             product_image: item.product_image,
@@ -294,8 +473,9 @@ router.post("/orders", getCartData, getProductData, checkInventory, async (req, 
     });
 
     // Skickar newOrder till sendOrder och får tillbaks invoiceStatus, invoiceMessage, emailStatus, emailMessage
-    const { invoiceStatus, invoiceMessage, emailStatus, emailMessage } = await sendOrder(newOrder, user_email);
+    const { invoiceStatus, invoiceMessage, emailStatus, emailMessage } = await sendOrder(newOrder, user_email, token);
 
+    // Returnerar success med invoice och email status
     res.status(201).json({
       message: "Order created successfully",
       order: newOrder,
@@ -306,9 +486,10 @@ router.post("/orders", getCartData, getProductData, checkInventory, async (req, 
     });
 
   } catch (error) {
+    // Returnera error
     res.status(500).json({
-      error: "Misslyckades att skapa order",
-      message: error.message,
+      error: "Failed to create order",
+      message: error.message
     });
   }
 });
@@ -336,32 +517,24 @@ router.post("/orders", getCartData, getProductData, checkInventory, async (req, 
  *     responses:
  *       200:
  *         description: Successfully deleted order
- *         schema:
- *           type: object
- *           properties:
- *             msg:
- *               type: string
- *               example: "Successfully deleted order with ID: 123"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Successfully deleted order with ID: 123"
+ *       401: 
+ *         description: Missing token. 
  *       403:
  *         description: Access denied. Admins only.
- *         schema:
- *           type: object
- *           properties:
- *             error:
- *               type: string
- *               example: "Access denied. Admins only."
+ *       404:
+ *         description: Order not found.
  *       500:
- *         description: Failed to delete order
- *         schema:
- *           type: object
- *           properties:
- *             error:
- *               type: string
- *               example: "Failed to delete order"
- *             message:
- *               type: string
- *               example: "Detailed error message"
+ *         description: Internal server error while deleting the order.
  */
+
 
 router.delete('/admin/delete/:order_id', async (req, res) => {
   const { order_id } = req.params; // Hämtar order_id från URLen
@@ -372,6 +545,14 @@ router.delete('/admin/delete/:order_id', async (req, res) => {
   }
 
   try {
+    const order = await prisma.orders.findUnique({
+      where: { order_id: parseInt(order_id)}
+    })
+
+    if (!order) {
+      return res.status(404).json({ error: `Order #${order_id} does not exist.` });
+    }
+
     await prisma.orders.delete({
       where: { order_id: parseInt(order_id) }
     });

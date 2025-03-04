@@ -22,7 +22,7 @@ const getCartData = async (req, res, next) => {
         const response = await fetch(`${CART_SERVICE_URL}/cart/${user_id}`, {
             method: "GET",
             headers: {
-                'token': token // Send token in the headers
+                'Authorization': `Bearer ${token}`
             }
         });
 

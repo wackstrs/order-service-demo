@@ -1,3 +1,5 @@
+const CART_SERVICE_URL = process.env.CART_SERVICE_URL;
+
 const getCartData = async (req, res, next) => {
     const { shipping_address } = req.body; // Fetch shipping_address from req body
 

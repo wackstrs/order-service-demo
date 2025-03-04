@@ -388,6 +388,11 @@ router.post("/orders", authMiddleware, getCartData, getProductData, checkInvento
   const shipping_address = req.shipping_address; // Gets shipping_address from cart.js
   const token = req.token; // Get token from req (set by authMiddleware)
 
+   // Log key data for debugging
+   console.log("User ID in Order Route:", user_id);
+   console.log("Cart Data in Order Route:", cartData);
+   console.log("Shipping Address in Order Route:", shipping_address);
+   
   try {
     // Calculate the total price of the order
     const order_price = cartData.cart.reduce((sum, item) => sum + parseFloat(item.total_price), 0);

@@ -123,7 +123,7 @@ router.get("/admin/orders", authMiddleware, adminMiddleware, async (req, res) =>
  *                   timestamp:
  *                     type: string
  *                     format: date-time
- *                     example: "2025-03-03T17:07:12.701Z"
+ *                     example: "2025-03-03T17:07:12.701Z"  # Adjusted to your timestamp format
  *                   order_price:
  *                     type: string
  *                     example: "11"
@@ -196,30 +196,36 @@ router.get("/admin/orders", authMiddleware, adminMiddleware, async (req, res) =>
  *                   example: "An unexpected error occurred while retrieving orders."
  */
 
-router.get("/orders", async (req, res) => {
+
+router.get("/orders", authMiddleware, async (req, res) => {
   const user_id = req.user.sub; // Hämtar user_id från JWTn
 
   try {
+    // Fetch all orders for the user
     const orders = await prisma.orders.findMany({
-      // Hittar alla orders som hör till denna user_id
       where: { user_id: parseInt(user_id) },
-      include: { // Inkluderar orderItems
+      include: {
         order_items: true,
       },
     });
 
+    // If no orders are found for the user
     if (orders.length === 0) {
-      // Om användaren inte har någon order
-      return res
-        .status(404)
-        .json({ msg: `No orders found for user with ID: ${user_id}.` });
+      return res.status(404).json({
+        msg: `No orders found for user with ID: ${user_id}.`,
+      });
     }
 
-    // Om allt ok, returnerar orders
+    // Return the orders
     res.status(200).json(orders);
-  } catch (err) { // Om någonting misslyckas, returnera error kod 500
+  } catch (err) {
     console.error("Error fetching orders:", err);
-    res.status(500).json({ msg: "Internal server error" });
+
+    // Handle unexpected errors
+    res.status(500).json({
+      msg: "Internal server error",
+      error: err.message,  // Optionally send detailed error message in response
+    });
   }
 });
 

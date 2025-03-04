@@ -3,8 +3,8 @@ const router = express.Router();
 const prisma = require("../config/prisma");
 
 // Importera middlewares
-const authMiddleware = require("./authMiddleware");  // Import authentication middleware
-const adminMiddleware = require("./adminMiddleware"); // Import admin authorization middleware
+const authMiddleware = require("../middleware/authMiddleware.js");
+const adminMiddleware = require("../middleware/adminMiddleware.js");
 const getCartData = require('../middleware/cart.js');
 const getProductData = require('../middleware/product.js');
 const checkInventory = require('../middleware/inventory.js');

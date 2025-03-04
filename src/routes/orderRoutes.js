@@ -96,14 +96,8 @@ router.get("/admin/orders", authMiddleware, adminMiddleware, async (req, res) =>
  *     description: Fetches all orders related to a given user ID, which is extracted from the JWT token.
  *     operationId: getOrdersForUser
  *     tags: [Orders]
- *     parameters:
- *       - name: token
- *         in: header
- *         required: true
- *         description: The JWT token used for authentication. The user_id will be extracted from this token.
- *         schema:
- *           type: string
- *           description: The JWT token for authentication.
+ *     security:
+ *       - bearerAuth: []  # This specifies the bearer token authentication
  *     responses:
  *       200:
  *         description: Successfully retrieved orders.
@@ -195,7 +189,6 @@ router.get("/admin/orders", authMiddleware, adminMiddleware, async (req, res) =>
  *                   type: string
  *                   example: "An unexpected error occurred while retrieving orders."
  */
-
 
 router.get("/orders", authMiddleware, async (req, res) => {
   const user_id = req.user.sub; // Hämtar user_id från JWTn

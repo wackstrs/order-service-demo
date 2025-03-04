@@ -12,11 +12,15 @@ const options = {
         },
         servers: [
             {
-                url: process.env.DEPLOYMENT_URL || "http://localhost:8080/api",
+                url: process.env.DEPLOYMENT_URL || "http://localhost:8080/api",  // Production server or fallback to localhost
+                description: 'Production Server',
             },
-            {
-                url: process.env.LOCAL_URL || "http://localhost:8080/api",
-            },
+            ...(process.env.NODE_ENV === 'development' ? [   // Only add the local server in development
+                {
+                    url: process.env.LOCAL_URL || "http://localhost:8080/api",
+                    description: 'Development Server',
+                }
+            ] : []),
         ],
         components: {
             securitySchemes: {

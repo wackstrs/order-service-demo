@@ -375,18 +375,18 @@ router.get("/orders", authMiddleware, async (req, res) => {
  *                   example: "An unexpected error occurred while creating the order"
  */
 
-router.post("/orders", getCartData, getProductData, checkInventory, async (req, res) => {
-  const user_id = parseInt(req.user.sub, 10); // Hämtar user_id från req (req.user.sub är en string men sparas som int i vår prisma)
-  const cartData = req.cartData; // Hämtar cartData från middleware
-  const token = req.token; // Hämtar token från req
-  const shipping_address = req.shipping_address; // hämtar shipping_address från req (i cart.js)
+router.post("/orders", authMiddleware, getCartData, getProductData, checkInventory, async (req, res) => {
+  const user_id = parseInt(req.user.sub, 10); // Get user_id from req.user (set by authMiddleware)
+  const cartData = req.cartData; // Gets cartData from getCartData middleware
+  const shipping_address = req.shipping_address; // Gets shipping_address from cart.js
+  const token = req.token; // Get token from req (set by authMiddleware)
 
   try {
-    // Beräkna totalpriset för ordern
+    // Calculate the total price of the order
     const order_price = cartData.cart.reduce((sum, item) => sum + parseFloat(item.total_price), 0);
     const formattedOrderPrice = parseFloat(order_price.toFixed(2));
 
-    // --- SKAPA ORDER I DATABASEN ---
+    // --- CREATE ORDER IN THE DATABASE ---
     const newOrder = await prisma.orders.create({
       data: {
         user_id,
@@ -409,10 +409,11 @@ router.post("/orders", getCartData, getProductData, checkInventory, async (req, 
       include: { order_items: true },
     });
 
-    // Skickar newOrder till sendOrder och får tillbaks invoiceStatus, invoiceMessage, emailStatus, emailMessage
-    const { invoiceStatus, invoiceMessage, emailStatus, emailMessage } = await sendOrder(newOrder, token);
+    // Send the newOrder to sendOrder and get back invoice and email status
+    const { invoiceStatus, invoiceMessage, emailStatus, emailMessage } = await sendOrder(newOrder, token); // Pass the token here
 
-    // Returnerar success med invoice och email status
+
+    // Return success with invoice and email status
     res.status(201).json({
       message: "Order created successfully",
       order: newOrder,
@@ -423,7 +424,7 @@ router.post("/orders", getCartData, getProductData, checkInventory, async (req, 
     });
 
   } catch (error) {
-    // Returnera error
+    // Return error if something fails
     res.status(500).json({
       error: "Failed to create order",
       message: error.message

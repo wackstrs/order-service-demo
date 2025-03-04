@@ -2,7 +2,7 @@ const PRODUCT_SERVICE_URL = process.env.PRODUCT_SERVICE_URL;
 
 const getProductData = async (req, res, next) => {
     const cartData = req.cartData;
-    const token = process.env.PRODUCT_SERVICE_AUTH_TOKEN || req.token;
+    const token = req.token; // Token is available from the authMiddleware
 
     try {
         // Hämtar alla product_id från användarens cart
@@ -17,7 +17,7 @@ const getProductData = async (req, res, next) => {
         const response = await fetch(`${PRODUCT_SERVICE_URL}/products/batch`, {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${token.trim()}`,
+                'Authorization': `Bearer ${token}`,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(requestBody)

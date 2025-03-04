@@ -61,7 +61,7 @@ async function sendOrder(newOrder, token) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                "Authorization": `Bearer ${token.trim()}`
+                "Authorization": `Bearer ${token}`
             },
             body: JSON.stringify(invoiceData),
         }).then(res => res.ok ? res.json() : Promise.reject(`Invoice API status: ${res.status} - ${res.statusText}`)),
@@ -70,7 +70,7 @@ async function sendOrder(newOrder, token) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                "Authorization": `Bearer ${token.trim()}`
+                "Authorization": `Bearer ${token}`
             },
             body: JSON.stringify(emailData),
         }).then(res => res.ok ? res.json() : Promise.reject(`Email API status: ${res.status} - ${res.statusText}`)),

@@ -57,7 +57,8 @@ async function sendOrder(newOrder, token) {
 
     // Kör båda requests parallellt
     const [invoiceResult, emailResult] = await Promise.allSettled([
-        fetch(INVOICING_SERVICE_URL, {
+        // Invoicing request with /orders endpoint
+        fetch(`${INVOICING_SERVICE_URL}/orders`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -66,7 +67,8 @@ async function sendOrder(newOrder, token) {
             body: JSON.stringify(invoiceData),
         }).then(res => res.ok ? res.json() : Promise.reject(`Invoice API status: ${res.status} - ${res.statusText}`)),
 
-        fetch(EMAIL_SERVICE_URL, {
+        // Email request with /order endpoint
+        fetch(`${EMAIL_SERVICE_URL}/order`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -74,7 +76,7 @@ async function sendOrder(newOrder, token) {
             },
             body: JSON.stringify(emailData),
         }).then(res => res.ok ? res.json() : Promise.reject(`Email API status: ${res.status} - ${res.statusText}`)),
-    ])
+    ]);
 
     // Checkar om promisen returnerar 'fulfilled'
     const invoiceStatus = invoiceResult.status === "fulfilled" ? "success" : "failed";

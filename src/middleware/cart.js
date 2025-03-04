@@ -1,5 +1,3 @@
-const CART_SERVICE_URL = process.env.CART_SERVICE_URL;
-
 const getCartData = async (req, res, next) => {
     const { shipping_address } = req.body; // Fetch shipping_address from req body
 
@@ -9,16 +7,27 @@ const getCartData = async (req, res, next) => {
     }
 
     const user_id = req.user.sub; // user_id comes from the JWT token (set by authMiddleware)
-    const token = req.token; // Use the token that was set by authMiddleware
+    const token = req.headers.authorization.split(" ")[1]; // Extract token from Authorization header
+
+    console.log("User ID:", user_id); // Log user_id for debugging
+    console.log("Token:", token); // Log token for debugging
+
+    if (!user_id) {
+        return res.status(400).json({ message: 'User ID is required' });
+    }
 
     try {
         // Fetch user's cart from the cart service
         const response = await fetch(`${CART_SERVICE_URL}/cart/${user_id}`, {
             method: "GET",
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`, // Ensure token is set properly
+                'Content-Type': 'application/json',
             }
         });
+
+        // Log the response status code to check if the fetch was successful
+        console.log("Cart Service Response Status:", response.status);
 
         if (!response.ok) {
             console.error(`Failed to fetch cart for user ${user_id}`);
@@ -31,6 +40,7 @@ const getCartData = async (req, res, next) => {
         }
 
         const cartData = await response.json();
+        console.log("Cart Data:", cartData); // Log the cart data
 
         if (!cartData || !cartData.cart || !cartData.cart.length) {
             console.error(`No cart found for user ${user_id}`);
@@ -52,5 +62,3 @@ const getCartData = async (req, res, next) => {
         });
     }
 };
-
-module.exports = getCartData;

@@ -9,7 +9,7 @@ const getCartData = async (req, res, next) => {
     }
 
     const user_id = req.user.sub; // user_id comes from the JWT token (set by authMiddleware)
-    const token = req.headers.authorization.split(" ")[1]; // Extract token from Authorization header
+    const token = req.token; // Use the token that was set by authMiddleware
 
     console.log("User ID:", user_id); // Log user_id for debugging
     console.log("Token:", token); // Log token for debugging
@@ -23,8 +23,7 @@ const getCartData = async (req, res, next) => {
         const response = await fetch(`${CART_SERVICE_URL}/cart/${user_id}`, {
             method: "GET",
             headers: {
-                'Authorization': `Bearer ${token}`, // Ensure token is set properly
-                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` // Ensure token is set properly
             }
         });
 

@@ -64,3 +64,5 @@ const getCartData = async (req, res, next) => {
         });
     }
 };
+
+module.exports = getCartData;

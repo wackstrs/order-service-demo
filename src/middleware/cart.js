@@ -12,13 +12,13 @@ const getCartData = async (req, res, next) => {
     const token = req.token; // token comes from the JWT token (set by authMiddleware)
 
     try {
-       // Fetch user's cart
-       const response = await fetch(`${CART_SERVICE_URL}/cart/${user_id}`, {
-        method: "GET",
-        headers: {
-            'Authorization': `Bearer ${token}` // Use Bearer token for authorization
-        }
-    });
+        // Hämta kundvagnen för en specifik användare
+        const response = await fetch(`${CART_SERVICE_URL}/cart/${user_id}`, {
+            method: "GET",
+            headers: {
+                'token': token // Kommer från JWT token
+            }
+        });
 
         // If the fetch fails, return an error
         if (!response.ok) {

@@ -6,7 +6,7 @@ const EMAIL_SERVICE_URL = process.env.EMAIL_SERVICE_URL;
 // Skicka ordern till fakturering / invoicing
 // Information om beställningen kommer från getCartData funktion
 // dens return kan användas i /orders POST i orderRoutes för att köra sendOrder
-async function sendOrder(newOrder, user_email, token) {
+async function sendOrder(newOrder, token) {
     const { user_id, order_price, order_id, order_items, timestamp, shipping_address } = newOrder;
 
     // Invoice payload
@@ -27,7 +27,6 @@ async function sendOrder(newOrder, user_email, token) {
 
     // Email payload
     const emailData = {
-        to: user_email,
         subject: `Beercraft Order Confirmation #${order_id}`,
         body: [
             {
@@ -69,7 +68,10 @@ async function sendOrder(newOrder, user_email, token) {
 
         fetch(EMAIL_SERVICE_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                "Authorization": `Bearer ${token.trim()}`
+            },
             body: JSON.stringify(emailData),
         }).then(res => res.ok ? res.json() : Promise.reject(`Email API status: ${res.status} - ${res.statusText}`)),
     ])

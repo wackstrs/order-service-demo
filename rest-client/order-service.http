@@ -1,0 +1,61 @@
+### Hämta alla ordrar
+GET {{$dotenv ORDER_SERVICE_URL_DEMO}}/admin/orders
+Content-Type: application/json
+token: {{$dotenv ORDER_SERVICE_ADMIN_AUTH_TOKEN}}
+
+### Hämta en användares alla ordrar
+GET {{$dotenv ORDER_SERVICE_URL_DEMO}}/orders/
+token: {{$dotenv ORDER_SERVICE_USER_AUTH_TOKEN}}
+
+### Skapa en ny order
+POST {{$dotenv ORDER_SERVICE_URL_DEMO}}/orders
+Content-Type: application/json
+token: {{$dotenv ORDER_SERVICE_USER_AUTH_TOKEN}}
+
+{
+  "shipping_address": "BORGÅ"
+}
+
+
+### Radera en order
+DELETE {{$dotenv ORDER_SERVICE_URL_DEMO}}/admin/delete/1
+Content-Type: application/json
+token: {{$dotenv ORDER_SERVICE_ADMIN_AUTH_TOKEN}}
+
+### Skapa en ny order
+POST {{$dotenv ORDER_SERVICE_URL_DEMO}}/orders
+Content-Type: application/json
+token: {{$dotenv ORDER_SERVICE_USER_AUTH_TOKEN}}
+
+### Skapa användare
+POST https://user-service-api-user-service.2.rahtiapp.fi/users
+Content-Type: application/json
+
+{
+    "name": "Order Service",
+    "email": "wackstrs@arcada.fi",
+    "password": "password123",
+    "phone": "11887744235",
+    "dob": "1993-01-01T00:00:00Z",
+    "address": {
+        "street": "123 Main St",
+        "zipcode": "12345",
+        "city": "yayLand",
+        "country": "Country"
+    },
+    "data": {
+        "gender": "female",
+        "height": "180cm",
+        "weight": "100kg"
+    }
+}
+
+
+### Skapa en ny order
+POST {{$dotenv ORDER_SERVICE_URL_DEMO}}/orders
+Content-Type: application/json
+token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxOCIsIm5hbWUiOiJPcmRlciBTZXJ2aWNlIiwiZW1haWwiOiJ3YWNrc3Ryc0BhcmNhZGEuZmkiLCJyb2xlIjoidXNlciIsImV4cCI6MTc0MTE2Nzc4NH0.VxS2GiKCk9XTIh0KDiMyTN7IiIgG-YQqnr23EGE6FiE
+
+{
+  "shipping_address": "Keskuskatu 12, Helsinki, Uusimaa, 00100, Suomi"
+}

@@ -1,0 +1,30 @@
+### Hämta alla fakturor
+GET {{$dotenv INVOICING_SERVICE_URL}}/orders
+Content-Type: application/json
+
+### Skapa en ny faktura
+POST {{$dotenv INVOICING_SERVICE_URL}}/orders
+Content-Type: application/json
+
+{
+    "user_id": 19,
+    "timestamp": "2025-02-13T23:40:17.778Z",
+    "order_price": 34.50,
+    "order_id": 67,
+    "order_items": [
+        {
+            "order_item_id": 78,
+            "product_id": 101,
+            "amount": 3,
+            "product_price": 3.00,
+            "product_name": "Corona"
+        },
+        {
+            "order_item_id": 79,
+            "product_id": 102,
+            "amount": 1,
+            "product_price": 25.50,
+            "product_name": "A. Le Coq Premium 24x0,33l"
+        }
+    ]
+}

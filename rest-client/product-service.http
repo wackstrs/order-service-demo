@@ -1,0 +1,9 @@
+### Hämta alla produkter
+GET {{$dotenv PRODUCT_SERVICE_URL}}/products
+Content-Type: application/json
+Authorization: Bearer {{$dotenv PRODUCT_SERVICE_AUTH_TOKEN}}
+
+### Hämta en produkt (sku)
+GET {{$dotenv PRODUCT_SERVICE_URL}}/products/10001-FIL
+Content-Type: application/json
+Authorization: Bearer {{$dotenv PRODUCT_SERVICE_AUTH_TOKEN}}

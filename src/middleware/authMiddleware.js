@@ -1,37 +1,21 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
-/**
- * Middleware för att verifiera JWT-token och skydda API-endpoints.
- *
- * Args:
- *  - req (Object): Express request-objekt, där JWT-token skickas i Authorization-headern
- *  - res (Object): Express response-objekt för att skicka tillbaka svar vid fel
- *  - next (Function): Nästa middleware eller route-handler
- *
- * Returns:
- *  - Om ingen token tillhandahålls → HTTP 401 (Unauthorized)
- *  - Om token är ogiltig eller utgången → HTTP 403 (Forbidden)
- *  - Om token är giltig → Lägger till `req.user` och går vidare till nästa middleware
- *
- * Exempel på användning:
- *  - router.get("/orders/:user_id", authenticateToken, getOrders);
- */
-function authenticateToken(req, res, next) {
-    const token = req.headers["token"]; // Token skickas i Authorization-headern
+const authMiddleware = (req, res, next) => {
+    const authHeader = req.headers.authorization; // Get token from Authorization header
 
-    if (!token) {
-        return res.status(401).json({ msg: "Åtkomst nekad. Ingen token tillhandahållen." });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ error: "Unauthorized. Token missing or invalid." });
     }
+
+    const token = authHeader.split(" ")[1]; // Extract the actual token
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET); // Verifierar token med vår hemliga nyckel
-        req.user = decoded; // Lägger till användardata i request-objektet
-        req.token = token; // Lägger till token i request-objektet
-        next(); 
-    } catch (err) {
-        console.error("Token verification error:", err); // Log error for debugging
-        return res.status(403).json({ msg: "Ogiltig eller utgången token." });
+        const decoded = jwt.verify(token, process.env.JWT_SECRET); // Verify JWT
+        req.user = decoded; // Attach decoded payload to request object
+        next(); // Proceed to the next middleware
+    } catch (error) {
+        return res.status(403).json({ error: "Invalid or expired token." });
     }
-}
+};
 
-module.exports = authenticateToken;
+module.exports = authMiddleware;

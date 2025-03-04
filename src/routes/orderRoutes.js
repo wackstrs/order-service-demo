@@ -3,6 +3,8 @@ const router = express.Router();
 const prisma = require("../config/prisma");
 
 // Importera middlewares
+const authMiddleware = require("./authMiddleware");  // Import authentication middleware
+const adminMiddleware = require("./adminMiddleware"); // Import admin authorization middleware
 const getCartData = require('../middleware/cart.js');
 const getProductData = require('../middleware/product.js');
 const checkInventory = require('../middleware/inventory.js');
@@ -122,30 +124,20 @@ const sendOrder = require("../middleware/sendOrder.js");
  *                   example: "An unexpected error occurred while retrieving orders."
  */
 
-router.get("/admin/orders", async (req, res) => {
-  const role = req.user.role;
-
-  if (role !== 'admin') {
-    return res.status(403).json({ error: "Access denied. Admins only." });
-  }
-
+router.get("/admin/orders", authMiddleware, adminMiddleware, async (req, res) => {
   try {
-    const orders = await prisma.orders.findMany({
-      include: {
-        order_items: true,
-      },
-    });
+      const orders = await prisma.orders.findMany({
+          include: { order_items: true },
+      });
 
-    if (orders.length === 0) {
-      return res.status(404).json({ error: "No orders found." });
-    }
+      if (orders.length === 0) {
+          return res.status(404).json({ error: "No orders found." });
+      }
 
-    res.status(200).json(orders);
+      res.status(200).json(orders);
   } catch (error) {
-    console.error(error);
-    res
-      .status(500)
-      .json({ error: "Failed to retrieve orders.", message: error.message });
+      console.error(error);
+      res.status(500).json({ error: "Failed to retrieve orders.", message: error.message });
   }
 });
 
@@ -440,7 +432,6 @@ router.get("/orders", async (req, res) => {
 router.post("/orders", getCartData, getProductData, checkInventory, async (req, res) => {
   const user_id = parseInt(req.user.sub, 10); // Hämtar user_id från req (req.user.sub är en string men sparas som int i vår prisma)
   const cartData = req.cartData; // Hämtar cartData från middleware
-  const user_email = req.user.email; // Hämtar email från req
   const token = req.token; // Hämtar token från req
   const shipping_address = req.shipping_address; // hämtar shipping_address från req (i cart.js)
 
@@ -473,7 +464,7 @@ router.post("/orders", getCartData, getProductData, checkInventory, async (req, 
     });
 
     // Skickar newOrder till sendOrder och får tillbaks invoiceStatus, invoiceMessage, emailStatus, emailMessage
-    const { invoiceStatus, invoiceMessage, emailStatus, emailMessage } = await sendOrder(newOrder, user_email, token);
+    const { invoiceStatus, invoiceMessage, emailStatus, emailMessage } = await sendOrder(newOrder, token);
 
     // Returnerar success med invoice och email status
     res.status(201).json({
@@ -536,34 +527,30 @@ router.post("/orders", getCartData, getProductData, checkInventory, async (req, 
  */
 
 
-router.delete('/admin/delete/:order_id', async (req, res) => {
-  const { order_id } = req.params; // Hämtar order_id från URLen
-
-  // Kollar om användaren är en admin via dens JWT token
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: "Access denied. Admins only." });
-  }
+router.delete("/admin/delete/:order_id", authMiddleware, adminMiddleware, async (req, res) => {
+  const { order_id } = req.params; // Extract order ID from URL
 
   try {
-    const order = await prisma.orders.findUnique({
-      where: { order_id: parseInt(order_id)}
-    })
+      // Check if order exists
+      const order = await prisma.orders.findUnique({
+          where: { order_id: parseInt(order_id) }
+      });
 
-    if (!order) {
-      return res.status(404).json({ error: `Order #${order_id} does not exist.` });
-    }
+      if (!order) {
+          return res.status(404).json({ error: `Order #${order_id} does not exist.` });
+      }
 
-    await prisma.orders.delete({
-      where: { order_id: parseInt(order_id) }
-    });
+      // Delete order
+      await prisma.orders.delete({
+          where: { order_id: parseInt(order_id) }
+      });
 
-    res.status(200).json({ msg: `Successfully deleted order with ID: ${order_id}` });
+      res.status(200).json({ message: `Successfully deleted order with ID: ${order_id}` });
+
   } catch (error) {
-    res.status(500).json({
-      error: "Failed to delete order",
-      message: error.message,
-    });
+      console.error("Error deleting order:", error);
+      res.status(500).json({ error: "Failed to delete order", message: error.message });
   }
-})
+});
 
 module.exports = router;

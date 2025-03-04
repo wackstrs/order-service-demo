@@ -1,0 +1,21 @@
+### Hämta lagersaldo för alla produkter
+GET {{$dotenv INVENTORY_SERVICE_URL}}/inventory
+Content-Type: application/json
+
+### Minska lagersaldo för produkter
+POST {{$dotenv INVENTORY_SERVICE_URL}}/inventory/decrease
+Content-Type: application/json
+
+{
+  "email": "order-service@test.com",
+  "items": [
+    {
+      "productCode": "0001",
+      "quantity": 1
+    },
+    {
+      "productCode": "0002",
+      "quantity": 2
+    }
+  ]
+}

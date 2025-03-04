@@ -18,8 +18,22 @@ const options = {
                 url: process.env.LOCAL_URL || "http://localhost:8080/api",
             },
         ],
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT", // Indicates it uses a JWT token
+                },
+            },
+        },
+        security: [
+            {
+                bearerAuth: [], // Applies security globally to all routes unless overridden
+            },
+        ],
     },
-    apis: ['./src/routes/*.js'],
+    apis: ['./src/routes/*.js'], // Path to route files containing Swagger comments
 };
 
 const swaggerSpec = swaggerJSDoc(options);

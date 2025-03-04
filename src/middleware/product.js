@@ -2,9 +2,7 @@ const PRODUCT_SERVICE_URL = process.env.PRODUCT_SERVICE_URL;
 
 const getProductData = async (req, res, next) => {
     const cartData = req.cartData;
-    const token = req.headers.authorization.split(" ")[1]; // Token is available from the authMiddleware
-
-    console.log("Token:", token); // Log token for debugging
+    const token = req.token; // Use the token that was set by authMiddleware
 
     try {
         // Hämtar alla product_id från användarens cart

@@ -4,7 +4,10 @@ const INVENTORY_SERVICE_URL = `${process.env.INVENTORY_SERVICE_URL}/inventory/de
 const checkInventory = async (req, res, next) => {
     const cartData = req.cartData; // cartData från föregående middleware
     const user_email = req.user.email; // email från req
-    const token = req.token; // Token från req
+    const token = req.headers.authorization.split(" ")[1];
+
+    console.log("User Email:", user_email); // Log user_email för debugging
+    console.log("Token:", token); // Log token för debugging
 
     try {
         const inventoryRequest = {

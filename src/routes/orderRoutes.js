@@ -15,19 +15,22 @@ const sendOrder = require("../middleware/sendOrder.js");
  * /admin/orders:
  *   get:
  *     summary: Retrieve all orders (Admin access only)
- *     description: Fetches all orders from the database.
- *     tags: [Orders]
+ *     description: Fetches all orders along with their order items. Only accessible by admin users.
+ *     operationId: getAllOrders
+ *     tags:
+ *       - Orders
+ *     security:
+ *       - bearerAuth: []  # Requires JWT authentication
  *     parameters:
- *       - in: header
- *         description: The JWT token used for authentication. Required to get orders.
- *         name: token
+ *       - name: Authorization
+ *         in: header
+ *         description: "Bearer token for authentication (format: 'Bearer <token>')"
  *         required: true
  *         schema:
  *           type: string
- *           description: The JWT token for authentication.
  *     responses:
  *       200:
- *         description: Successfully retrieved orders.
+ *         description: Successfully retrieved orders
  *         content:
  *           application/json:
  *             schema:
@@ -37,92 +40,39 @@ const sendOrder = require("../middleware/sendOrder.js");
  *                 properties:
  *                   order_id:
  *                     type: integer
- *                     example: 20
+ *                     example: 123
  *                   user_id:
  *                     type: integer
- *                     example: 101
- *                   timestamp:
+ *                     example: 18
+ *                   created_at:
  *                     type: string
  *                     format: date-time
- *                     example: "2025-03-03T17:07:12.701Z"
- *                   order_price:
- *                     type: string
- *                     example: "11"
- *                   shipping_address:
- *                     type: string
- *                     example: "123 Main St, City, Country, ZIP"
+ *                     example: "2024-03-01T12:34:56Z"
  *                   order_items:
  *                     type: array
  *                     items:
  *                       type: object
  *                       properties:
- *                         order_item_id:
- *                           type: integer
- *                           example: 48
- *                         order_id:
- *                           type: integer
- *                           example: 20
  *                         product_id:
- *                           type: string
- *                           example: "10000-FIL"
- *                         product_name:
- *                           type: string
- *                           example: "Karhu 4,6%"
+ *                           type: integer
+ *                           example: 456
  *                         quantity:
  *                           type: integer
- *                           example: 1
- *                         product_price:
- *                           type: string
- *                           example: "11"
- *                         total_price:
- *                           type: string
- *                           example: "11"
- *                         product_description:
- *                           type: string
- *                           example: "Gulbrun, medelfyllig, medelstor humlebeska, lätt maltighet, fruktig"
- *                         product_image:
- *                           type: string
- *                           example: "/uploads/1740587181163-karhu-46-burk.jpg"
- *                         product_country:
- *                           type: string
- *                           example: "Finland"
- *                         product_category:
- *                           type: string
- *                           example: "Lager"
+ *                           example: 2
+ *                         price:
+ *                           type: number
+ *                           format: float
+ *                           example: 19.99
+ *       401:
+ *         description: Unauthorized - Missing or invalid token
  *       403:
- *         description: Access denied. Admins only.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Access denied. Admins only."
+ *         description: Forbidden - User is not an admin
  *       404:
- *         description: No orders found.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "No orders found."
+ *         description: No orders found
  *       500:
- *         description: Server error.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Failed to retrieve orders."
- *                 message:
- *                   type: string
- *                   example: "An unexpected error occurred while retrieving orders."
+ *         description: Internal server error while retrieving orders
  */
+
 
 router.get("/admin/orders", authMiddleware, adminMiddleware, async (req, res) => {
   try {
@@ -494,17 +444,21 @@ router.post("/orders", getCartData, getProductData, checkInventory, async (req, 
  *     operationId: deleteOrder
  *     tags:
  *       - Orders
+ *     security:
+ *       - bearerAuth: []  # This specifies that authentication is required
  *     parameters:
  *       - name: order_id
  *         in: path
  *         description: The ID of the order to delete
  *         required: true
- *         type: integer
- *       - name: token
+ *         schema:
+ *           type: integer
+ *       - name: Authorization
  *         in: header
- *         description: The JWT token used for authentication. Required for admin access.
+ *         description: "Bearer token for authentication (format: 'Bearer <token>')"
  *         required: true
- *         type: string
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: Successfully deleted order
@@ -516,14 +470,14 @@ router.post("/orders", getCartData, getProductData, checkInventory, async (req, 
  *                 message:
  *                   type: string
  *                   example: "Successfully deleted order with ID: 123"
- *       401: 
- *         description: Missing token. 
+ *       401:
+ *         description: Unauthorized - Missing or invalid token
  *       403:
- *         description: Access denied. Admins only.
+ *         description: Forbidden - User is not an admin
  *       404:
- *         description: Order not found.
+ *         description: Order not found
  *       500:
- *         description: Internal server error while deleting the order.
+ *         description: Internal server error while deleting the order
  */
 
 

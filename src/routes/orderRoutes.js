@@ -231,12 +231,6 @@ router.get("/orders", authMiddleware, async (req, res) => {
  *     operationId: createOrder
  *     tags:
  *       - Orders
- *     parameters:
- *       - name: token
- *         in: header
- *         description: The JWT token used for authentication. Required for order creation.
- *         required: true
- *         type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -373,7 +367,20 @@ router.get("/orders", authMiddleware, async (req, res) => {
  *                 message:
  *                   type: string
  *                   example: "An unexpected error occurred while creating the order"
+ *     security:
+ *       - bearerAuth: []  # Add this section to indicate that the API requires authorization with a bearer token.
  */
+
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ */
+
 
 router.post("/orders", authMiddleware, getCartData, getProductData, checkInventory, async (req, res) => {
   const user_id = parseInt(req.user.sub, 10); // Get user_id from req.user (set by authMiddleware)

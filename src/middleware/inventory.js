@@ -15,7 +15,7 @@ const checkInventory = async (req, res, next) => {
             })),
         };
 
-        console.log("Sending to inventory-service...:", JSON.stringify(inventoryRequest, null, 2));
+        console.log("Checking inventory for cart items...");
 
         // Skickar en POST request till inventory service för att minska lagersaldot
         const inventoryResponse = await fetch(INVENTORY_SERVICE_URL, {
@@ -63,7 +63,7 @@ const checkInventory = async (req, res, next) => {
             });
         }
 
-        console.log("Inventory check successful");
+        console.log("Inventory Check - OK");
         next(); // Om allt ok, fortsätt till nästa middleware
     } catch (error) {
         console.error("Error checking inventory", error);

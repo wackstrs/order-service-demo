@@ -54,6 +54,7 @@ async function sendOrder(newOrder, token) {
 
     console.log("Invoicing Data:", JSON.stringify(invoiceData, null, 2));
     console.log("Email Data:", JSON.stringify(emailData, null, 2));
+    console.log("Token:", token);
 
     // Kör båda requests parallellt
     const [invoiceResult, emailResult] = await Promise.allSettled([

@@ -5,6 +5,7 @@ const getProductData = async (req, res, next) => {
     const token = req.token; // Use the token that was set by authMiddleware
 
     try {
+        console.log("Fetching product data for cart items...");
         // Hämtar alla product_id från användarens cart
         const productCodes = cartData.cart.map(item => item.product_id);
 
@@ -68,6 +69,7 @@ const getProductData = async (req, res, next) => {
 
         // Uppdatera cartData med produktinformation
         req.cartData.cart = updatedCartData;
+        console.log("Product Data Fetch - OK");
 
         // fortsätt till nästa middleware
         next();

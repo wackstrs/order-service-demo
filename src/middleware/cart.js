@@ -11,24 +11,19 @@ const getCartData = async (req, res, next) => {
     const user_id = req.user.sub; // user_id comes from the JWT token (set by authMiddleware)
     const token = req.token; // Use the token that was set by authMiddleware
 
-    console.log("User ID:", user_id); // Log user_id for debugging
-    console.log("Token:", token); // Log token for debugging
-
     if (!user_id) {
         return res.status(400).json({ message: 'User ID is required' });
     }
 
     try {
         // Hämta kundvagnen för en specifik användare
+        console.log(`Fetching cart for user ${user_id}...`);
         const response = await fetch(`${CART_SERVICE_URL}/cart/${user_id}`, {
             method: "GET",
             headers: {
                 'token': token // Kommer från JWT token
             }
         });
-
-        // Log the response status code to check if the fetch was successful
-        console.log("Cart Service Response Status:", response.status);
 
         if (!response.ok) {
             console.error(`Failed to fetch cart for user ${user_id}`);
@@ -41,7 +36,8 @@ const getCartData = async (req, res, next) => {
         }
 
         const cartData = await response.json();
-        console.log("Cart Data:", cartData); // Log the cart data
+
+        console.log("Cart Data Fetched - OK");
 
         if (!cartData || !cartData.cart || !cartData.cart.length) {
             console.error(`No cart found for user ${user_id}`);

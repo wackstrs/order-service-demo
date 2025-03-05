@@ -3,7 +3,6 @@ const router = express.Router();
 const prisma = require("../config/prisma");
 
 // Importera middlewares
-const authMiddleware = require("../middleware/authMiddleware.js");
 const adminMiddleware = require("../middleware/adminMiddleware.js");
 const getCartData = require('../middleware/cart.js');
 const getProductData = require('../middleware/product.js');
@@ -67,7 +66,7 @@ const sendOrder = require("../middleware/sendOrder.js");
  */
 
 
-router.get("/admin/orders", authMiddleware, adminMiddleware, async (req, res) => {
+router.get("/admin/orders", adminMiddleware, async (req, res) => {
   try {
     // Fetch orders including the order items
     const orders = await prisma.orders.findMany({
@@ -190,7 +189,7 @@ router.get("/admin/orders", authMiddleware, adminMiddleware, async (req, res) =>
  *                   example: "An unexpected error occurred while retrieving orders."
  */
 
-router.get("/orders", authMiddleware, async (req, res) => {
+router.get("/orders", async (req, res) => {
   const user_id = req.user.sub; // Hämtar user_id från JWTn
 
   try {
@@ -382,7 +381,7 @@ router.get("/orders", authMiddleware, async (req, res) => {
  */
 
 
-router.post("/orders", authMiddleware, getCartData, getProductData, checkInventory, async (req, res) => {
+router.post("/orders", getCartData, getProductData, checkInventory, async (req, res) => {
   const user_id = parseInt(req.user.sub, 10); // Get user_id from req.user (set by authMiddleware)
   const cartData = req.cartData; // Gets cartData from getCartData middleware
   const shipping_address = req.shipping_address; // Gets shipping_address from cart.js
@@ -482,7 +481,7 @@ router.post("/orders", authMiddleware, getCartData, getProductData, checkInvento
  */
 
 
-router.delete("/admin/delete/:order_id", authMiddleware, adminMiddleware, async (req, res) => {
+router.delete("/admin/delete/:order_id", adminMiddleware, async (req, res) => {
   const { order_id } = req.params; // Extract order ID from URL
 
   try {

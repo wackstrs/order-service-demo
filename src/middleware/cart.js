@@ -9,8 +9,8 @@ const getCartData = async (req, res, next) => {
         return res.status(400).json({ message: 'Shipping address is required' });
     }
 
-    const user_id = req.user.sub;
-    const token = req.token;
+    const user_id = req.user.sub; // user_id kommer från JWTn
+    const token = req.token; // Får token från middleware
 
     if (!user_id) {
         return res.status(400).json({ message: 'User ID is required' });
@@ -37,7 +37,8 @@ const getCartData = async (req, res, next) => {
             });
         }
 
-        const cartData = await response.json();
+       // Får cartData i JSON format
+       const cartData = await response.json();
 
         console.log("Cart Data Fetched - OK");
 

@@ -6,15 +6,15 @@ require("dotenv").config();
 
 const app = express();
 
-// CORS
+// CORS - Tillåter anrop från specifika källor
 const allowedOrigins = [
     process.env.USERS_FRONTEND_URL, 
     process.env.STORE_FRONTEND_URL  
 ];
 app.use(cors({
-    origin: allowedOrigins,  // tillåt anrop från frontend
+    origin: allowedOrigins,
     methods: "GET, POST, PUT, DELETE", 
-    allowedHeaders: ["Content-Type", "Authorization", "token"], 
+    allowedHeaders: ["Content-Type", "Authorization", "token"], // Tillåt specifika headers
     credentials: true,
 }));
 
@@ -26,7 +26,7 @@ const authenticateToken = require("./middleware/authMiddleware");
 const orderRoutes = require("./routes/orderRoutes");
 app.use("/api", authenticateToken, orderRoutes);
 
-// Root endpoint med information om API status
+// Root endpoint som ger statusinformation om API:t och databasen
 app.get("/", async (req, res) => {
     const timestamp = new Date().toISOString();
     try {

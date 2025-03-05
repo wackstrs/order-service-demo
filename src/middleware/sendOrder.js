@@ -54,11 +54,9 @@ async function sendOrder(newOrder, token) {
 
     console.log("Invoicing Data:", JSON.stringify(invoiceData, null, 2));
     console.log("Email Data:", JSON.stringify(emailData, null, 2));
-    console.log("Token:", token);
 
     // Kör båda requests parallellt
     const [invoiceResult, emailResult] = await Promise.allSettled([
-        // Invoicing request with /orders endpoint
         fetch(`${INVOICING_SERVICE_URL}/orders`, {
             method: 'POST',
             headers: {
@@ -68,7 +66,6 @@ async function sendOrder(newOrder, token) {
             body: JSON.stringify(invoiceData),
         }).then(res => res.ok ? res.json() : Promise.reject(`Invoice API status: ${res.status} - ${res.statusText}`)),
 
-        // Email request with /order endpoint
         fetch(`${EMAIL_SERVICE_URL}/order`, {
             method: 'POST',
             headers: {

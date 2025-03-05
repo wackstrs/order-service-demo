@@ -14,7 +14,7 @@ const sendOrder = require("../middleware/sendOrder.js");
  * /admin/orders:
  *   get:
  *     summary: Retrieve all orders (Admin access only)
- *     description: Fetches all orders along with their order items. Only accessible by admin users.
+ *     description: Fetches all orders from the database, including order items. Only accessible by admin users.
  *     operationId: getAllOrders
  *     tags:
  *       - Orders
@@ -36,25 +36,72 @@ const sendOrder = require("../middleware/sendOrder.js");
  *                   user_id:
  *                     type: integer
  *                     example: 18
- *                   created_at:
+ *                   timestamp:
  *                     type: string
  *                     format: date-time
- *                     example: "2024-03-01T12:34:56Z"
+ *                     example: "2025-03-04T23:18:59.504Z"
+ *                   order_price:
+ *                     type: string
+ *                     example: "11.7"
+ *                   shipping_address:
+ *                     type: string
+ *                     example: "123 Main St, City, Country"
  *                   order_items:
  *                     type: array
  *                     items:
  *                       type: object
  *                       properties:
- *                         product_id:
+ *                         order_item_id:
  *                           type: integer
- *                           example: 456
+ *                           example: 13
+ *                         order_id:
+ *                           type: integer
+ *                           example: 5
+ *                         product_id:
+ *                           type: string
+ *                           example: "10000-USL"
+ *                         product_name:
+ *                           type: string
+ *                           example: "Pabst Blue Ribbon"
  *                         quantity:
  *                           type: integer
- *                           example: 2
- *                         price:
- *                           type: number
- *                           format: float
- *                           example: 19.99
+ *                           example: 1
+ *                         product_price:
+ *                           type: string
+ *                           example: "1"
+ *                         total_price:
+ *                           type: string
+ *                           example: "1"
+ *                         product_description:
+ *                           type: string
+ *                           example: "Not the best."
+ *                         product_image:
+ *                           type: string
+ *                           example: "/uploads/1740679760255-pabst.jpeg"
+ *                         product_country:
+ *                           type: string
+ *                           example: "USA"
+ *                         product_category:
+ *                           type: string
+ *                           example: "Lager"
+ *               example:
+ *                 - order_id: 5
+ *                   user_id: 18
+ *                   timestamp: "2025-03-04T23:18:59.504Z"
+ *                   order_price: "11.7"
+ *                   shipping_address: "123 Main St, City, Country"
+ *                   order_items:
+ *                     - order_item_id: 13
+ *                       order_id: 5
+ *                       product_id: "10000-USL"
+ *                       product_name: "Pabst Blue Ribbon"
+ *                       quantity: 1
+ *                       product_price: "1"
+ *                       total_price: "1"
+ *                       product_description: "Not the best."
+ *                       product_image: "/uploads/1740679760255-pabst.jpeg"
+ *                       product_country: "USA"
+ *                       product_category: "Lager"
  *       401:
  *         description: Unauthorized - Missing or invalid token
  *       403:
@@ -68,17 +115,17 @@ const sendOrder = require("../middleware/sendOrder.js");
 
 router.get("/admin/orders", adminMiddleware, async (req, res) => {
   try {
-    // Fetch orders including the order items
+    // Hämtar alla orders från databasen
     const orders = await prisma.orders.findMany({
       include: { order_items: true },
     });
 
-    // If no orders are found, return a 404 error
+    // Om det inte finns några orders i databasen returnera 404
     if (orders.length === 0) {
       return res.status(404).json({ error: "No orders found." });
     }
 
-    // Return the orders with a 200 status
+    // Returnera alla orders i databasen
     res.status(200).json(orders);
   } catch (error) {
     console.error(error);
@@ -193,7 +240,7 @@ router.get("/orders", async (req, res) => {
   const user_id = req.user.sub; // Hämtar user_id från JWTn
 
   try {
-    // Fetch all orders for the user
+    // Hämtar alla orders för en specifik användare
     const orders = await prisma.orders.findMany({
       where: { user_id: parseInt(user_id) },
       include: {
@@ -201,22 +248,22 @@ router.get("/orders", async (req, res) => {
       },
     });
 
-    // If no orders are found for the user
+    // Om det inte finns några orders för användaren returnera 404
     if (orders.length === 0) {
       return res.status(404).json({
         msg: `No orders found for user with ID: ${user_id}.`,
       });
     }
 
-    // Return the orders
+    // Returnera alla orders för användaren
     res.status(200).json(orders);
   } catch (err) {
     console.error("Error fetching orders:", err);
 
-    // Handle unexpected errors
+    // Returnera 500 om något går fel
     res.status(500).json({
       msg: "Internal server error",
-      error: err.message,  // Optionally send detailed error message in response
+      error: err.message,
     });
   }
 });
@@ -382,17 +429,17 @@ router.get("/orders", async (req, res) => {
 
 
 router.post("/orders", getCartData, getProductData, checkInventory, async (req, res) => {
-  const user_id = parseInt(req.user.sub, 10); // Get user_id from req.user (set by authMiddleware)
-  const cartData = req.cartData; // Gets cartData from getCartData middleware
-  const shipping_address = req.shipping_address; // Gets shipping_address from cart.js
-  const token = req.token; // Get token from req (set by authMiddleware)
+  const user_id = parseInt(req.user.sub, 10); // Hämtar user_id från req (req.user.sub är en string men sparas som int i vår prisma)
+  const cartData = req.cartData; // Hämtar cartData från middleware
+  const token = req.token; // Hämtar token från req
+  const shipping_address = req.shipping_address; // hämtar shipping_address från req (i cart.js)
 
   try {
-    // Calculate the total price of the order
+    // Beräkna totalpriset för ordern
     const order_price = cartData.cart.reduce((sum, item) => sum + parseFloat(item.total_price), 0);
     const formattedOrderPrice = parseFloat(order_price.toFixed(2));
 
-    // --- CREATE ORDER IN THE DATABASE ---
+    // --- SKAPA ORDER I DATABASEN ---
     const newOrder = await prisma.orders.create({
       data: {
         user_id,
@@ -415,11 +462,10 @@ router.post("/orders", getCartData, getProductData, checkInventory, async (req, 
       include: { order_items: true },
     });
 
-    // Send the newOrder to sendOrder and get back invoice and email status
-    const { invoiceStatus, invoiceMessage, emailStatus, emailMessage } = await sendOrder(newOrder, token); // Pass the token here
+    // Skickar newOrder till sendOrder och får tillbaks invoiceStatus, invoiceMessage, emailStatus, emailMessage
+    const { invoiceStatus, invoiceMessage, emailStatus, emailMessage } = await sendOrder(newOrder, token);
 
-
-    // Return success with invoice and email status
+    // Returnerar success med invoice och email status
     res.status(201).json({
       message: "Order created successfully",
       order: newOrder,
@@ -430,7 +476,7 @@ router.post("/orders", getCartData, getProductData, checkInventory, async (req, 
     });
 
   } catch (error) {
-    // Return error if something fails
+    // Returnera error
     res.status(500).json({
       error: "Failed to create order",
       message: error.message
@@ -485,33 +531,25 @@ router.delete("/admin/delete/:order_id", adminMiddleware, async (req, res) => {
   const { order_id } = req.params; // Extract order ID from URL
 
   try {
-      // Ensure the order_id is a valid integer
-      const parsedOrderId = parseInt(order_id);
-      if (isNaN(parsedOrderId)) {
-          return res.status(400).json({ error: "Invalid order ID." });
-      }
+    const order = await prisma.orders.findUnique({
+      where: { order_id: parseInt(order_id)}
+    })
 
-      // Check if the order exists
-      const order = await prisma.orders.findUnique({
-          where: { order_id: parsedOrderId }
-      });
+    if (!order) {
+      return res.status(404).json({ error: `Order #${order_id} does not exist.` });
+    }
 
-      if (!order) {
-          return res.status(404).json({ error: `Order #${order_id} does not exist.` });
-      }
+    await prisma.orders.delete({
+      where: { order_id: parseInt(order_id) }
+    });
 
-      // Delete order
-      await prisma.orders.delete({
-          where: { order_id: parsedOrderId }
-      });
-
-      res.status(200).json({ message: `Successfully deleted order with ID: ${order_id}` });
-
+    res.status(200).json({ msg: `Successfully deleted order with ID: ${order_id}` });
   } catch (error) {
-      console.error("Error deleting order:", error);
-      res.status(500).json({ error: "Failed to delete order", message: error.message });
+    res.status(500).json({
+      error: "Failed to delete order",
+      message: error.message,
+    });
   }
-});
-
+})
 
 module.exports = router;

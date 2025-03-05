@@ -1,43 +1,35 @@
 const jwt = require('jsonwebtoken');
-
 /**
- * Middleware for verifying JWT token and protecting API endpoints.
- * 
- * @param {Object} req - Express request object where the token can be found
- * @param {Object} res - Express response object to send back responses
- * @param {Function} next - Next middleware or route handler to proceed
- * 
- * @returns {Object} - If token is missing or invalid, returns HTTP 401 or 403
- *                     If token is valid, adds `req.user` and proceeds to the next middleware
+ * Middleware för att verifiera JWT-token och skydda API-endpoints.
+ *
+ * @param {Object} req - Express request-objekt, förväntar sig JWT i Authorization-headern.
+ * @param {Object} res - Express response-objekt, används för att returnera felmeddelanden.
+ * @param {Function} next - Anropar nästa middleware eller route-handler.
+ *
+ * @returns
+ * - 401 Unauthorized om ingen token tillhandahålls.
+ * - 403 Forbidden om token är ogiltig eller har gått ut.
+ * - Om token är giltig läggs `req.user` och `req.token` till, sedan anropas `next()`.
+ *
+ * Exempel på användning:
+ * - router.get("/orders/:user_id", authenticateToken, getOrders);
  */
 function authenticateToken(req, res, next) {
-    // First, check the Authorization header for the "Bearer <token>" format
-    const authHeader = req.headers.authorization;
-    let token = null;
+    const authHeader = req.headers["authorization"];
 
-    // Extract token from the Authorization header if it exists
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.split(' ')[1]; // Get token after "Bearer "
-    }
-
-    // If token is not found in the Authorization header, check for a custom "token" header
-    if (!token) {
-        token = req.headers["token"];
-    }
-
-    // If token is missing entirely, respond with Unauthorized error
-    if (!token) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
         return res.status(401).json({ msg: "Access denied. No token provided." });
     }
 
+    const token = authHeader.split(" ")[1].trim();
+
     try {
-        // Verify the token using the secret key
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded; // Attach the decoded user data to the request object
-        req.token = token;  // Optionally, store the token itself in the request
-        next(); // Proceed to the next middleware or route handler
+        const decoded = jwt.verify(token, process.env.JWT_SECRET); // Verifiera token
+        req.user = decoded; // Spara användarinformation i request-objektet
+        req.token = token; // Spara token i request-objektet
+        next(); // Fortsätt till nästa middleware
     } catch (err) {
-        console.error("Token verification error:", err); // Log error for debugging
+        console.error("Token verification error:", err);
         return res.status(403).json({ msg: "Invalid or expired token." });
     }
 }

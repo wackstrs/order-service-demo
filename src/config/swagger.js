@@ -12,10 +12,10 @@ const options = {
         },
         servers: [
             {
-                url: process.env.DEPLOYMENT_URL || "http://localhost:8080/api",  // Production server or fallback to localhost
+                url: process.env.DEPLOYMENT_URL || "http://localhost:8080/api",
                 description: 'Production Server',
             },
-            ...(process.env.MODE === 'development' ? [   // Only add the local server in development
+            ...(process.env.MODE === 'development' ? [
                 {
                     url: process.env.LOCAL_URL || "http://localhost:8080/api",
                     description: 'Development Server',
@@ -27,17 +27,17 @@ const options = {
                 bearerAuth: {
                     type: "http",
                     scheme: "bearer",
-                    bearerFormat: "JWT", // Indicates it uses a JWT token
+                    bearerFormat: "JWT",
                 },
             },
         },
         security: [
             {
-                bearerAuth: [], // Applies security globally to all routes unless overridden
+                bearerAuth: [],
             },
         ],
     },
-    apis: ['./src/routes/*.js'], // Path to route files containing Swagger comments
+    apis: ['./src/routes/*.js'],
 };
 
 const swaggerSpec = swaggerJSDoc(options);

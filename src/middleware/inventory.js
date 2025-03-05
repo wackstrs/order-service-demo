@@ -1,12 +1,13 @@
-const INVENTORY_SERVICE_URL = `${process.env.INVENTORY_SERVICE_URL}/inventory/decrease`;
+const INVENTORY_SERVICE_URL = process.env.INVENTORY_SERVICE_URL;
 
 // Middleware som kontrollerar och reducerar lagersaldo för varje produkt i kundvagnen
 const checkInventory = async (req, res, next) => {
-    const cartData = req.cartData; // cartData från föregående middleware
-    const user_email = req.user.email; // email från req
-    const token = req.token; // Use the token that was set by authMiddleware
+    const cartData = req.cartData; // Hämta cartData från föregående middleware
+    const user_email = req.user.email; // Hämta användarens email från req
+    const token = req.token; // Hämta JWT-token
 
     try {
+        // Skapa request för att skicka till inventory service
         const inventoryRequest = {
             email: user_email,
             items: cartData.cart.map(item => ({
@@ -17,12 +18,12 @@ const checkInventory = async (req, res, next) => {
 
         console.log("Checking inventory for cart items...");
 
-        // Skickar en POST request till inventory service för att minska lagersaldot
-        const inventoryResponse = await fetch(INVENTORY_SERVICE_URL, {
+        // Skickar en POST-förfrågan till inventory service för att minska lagersaldot
+        const inventoryResponse = await fetch(`${INVENTORY_SERVICE_URL}/inventory/decrease`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Content-Type': 'application/json', 
+                'Authorization': `Bearer ${token}` 
             },
             body: JSON.stringify(inventoryRequest),
         });
@@ -41,7 +42,8 @@ const checkInventory = async (req, res, next) => {
                     detail: "The response from the inventory service could not be parsed as JSON." 
                 };
             }
-
+            
+            // Hantera olika statuskoder från inventory service
             if (inventoryResponse.status === 404) {
                 return res.status(404).json({
                     error: "Produkten hittades inte",

@@ -19,11 +19,11 @@ const getCartData = async (req, res, next) => {
     }
 
     try {
-        // Fetch user's cart from the cart service
+        // Hämta kundvagnen för en specifik användare
         const response = await fetch(`${CART_SERVICE_URL}/cart/${user_id}`, {
             method: "GET",
             headers: {
-                'Authorization': `Bearer ${token}` // Ensure token is set properly
+                'token': token // Kommer från JWT token
             }
         });
 
